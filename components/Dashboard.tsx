@@ -1,184 +1,179 @@
-import React from 'react';
-import { Users, Mars, Venus, Search, TrendingUp, Star, Award } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { 
+  Newspaper, Users, Award, Camera, ChevronRight, 
+  ExternalLink, UserCircle2, X, Search 
+} from 'lucide-react';
 
-export const Dashboard = ({ state, setState }: any) => {
-  const total = state.students?.length || 0;
-  const male = state.students?.filter((s: any) => s.gender === 'Nam').length || 0;
-  const female = total - male;
+export const Dashboard = ({ state }: any) => {
+  const [currentImg, setCurrentImg] = useState(0);
+  const [showStudentList, setShowStudentList] = useState(false);
+  const [searchMember, setSearchMember] = useState('');
 
-  // Hàm xử lý tăng/giảm tuần để đảm bảo State được cập nhật đúng cách
-  const updateWeek = (newWeek: number) => {
-    const val = Math.max(1, newWeek); // Không cho tuần nhỏ hơn 1
-    setState((prev: any) => ({
-      ...prev,
-      currentWeek: val
-    }));
-  };
+  // 1. Lấy dữ liệu từ state (đã load từ sheet news và xeploaihk)
+  const photos = state.newsData || []; // Giả định thầy load sheet news vào đây
+  const newsList = state.newsList || []; 
+  const bch = state.bch || [];
+
+  // Tự động chuyển ảnh sau 5 giây
+  useEffect(() => {
+    if (photos.length > 0) {
+      const timer = setInterval(() => {
+        setCurrentImg((prev) => (prev + 1) % photos.length);
+      }, 5000);
+      return () => clearInterval(timer);
+    }
+  }, [photos]);
 
   return (
-    <div className="space-y-12 animate-in fade-in duration-500">
-      <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
-        <div>
-          <h2 className="text-5xl font-black text-slate-900 tracking-tighter">Trung Tâm Điều Hành</h2>
-          <p className="text-slate-400 font-bold mt-2 text-lg">
-            Chào mừng Giáo viên chủ nhiệm trở lại - Tuần {state.currentWeek}
-          </p>
+    <div className="space-y-8 pb-20 animate-in fade-in duration-700">
+      
+      {/* 1. KHU VỰC ẢNH HOẠT ĐỘNG & TIN TỨC (Grid 2 cột) */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        {/* SLIDESHOW ẢNH (2/3 chiều rộng) */}
+        <div className="lg:col-span-2 relative group overflow-hidden rounded-[48px] bg-slate-200 aspect-video shadow-2xl">
+          {photos.length > 0 ? (
+            <>
+              <img 
+                src={photos[currentImg].link} 
+                className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" 
+                alt="Hoạt động lớp"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
+              <div className="absolute bottom-8 left-8 right-8 text-white">
+                <div className="flex items-center gap-2 mb-2 text-indigo-400 font-bold text-xs uppercase tracking-[0.2em]">
+                  <Camera size={14}/> Hoạt động lớp
+                </div>
+                <h3 className="text-2xl font-black">{photos[currentImg].title}</h3>
+              </div>
+              {/* Dots điều hướng */}
+              <div className="absolute bottom-4 right-8 flex gap-2">
+                {photos.map((_: any, i: number) => (
+                  <div key={i} className={`h-1.5 rounded-full transition-all ${i === currentImg ? 'w-8 bg-indigo-500' : 'w-2 bg-white/50'}`}></div>
+                ))}
+              </div>
+            </>
+          ) : (
+            <div className="w-full h-full flex items-center justify-center text-slate-400 font-bold italic">Chưa có ảnh hoạt động</div>
+          )}
         </div>
-        <div className="flex items-center gap-4 bg-white p-4 rounded-[28px] shadow-sm border border-slate-100 w-full md:w-96">
-            <Search className="text-slate-300" size={20}/>
-            <input 
-              type="text" 
-              placeholder="Tìm tên hoặc mã học sinh..." 
-              className="bg-transparent border-none outline-none font-bold text-slate-700 w-full text-sm"
-            />
-        </div>
-      </header>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        <StatCard 
-          icon={<Users size={28}/>} 
-          label="Sĩ số lớp" 
-          value={total} 
-          desc="Học sinh chính thức"
-          color="bg-indigo-600"
-        />
-        <StatCard 
-          icon={<Mars size={28}/>} 
-          label="Nam sinh" 
-          value={male} 
-          desc={`${((male/total)*100 || 0).toFixed(0)}% tổng sĩ số`}
-          color="bg-blue-500"
-        />
-        <StatCard 
-          icon={<Venus size={28}/>} 
-          label="Nữ sinh" 
-          value={female} 
-          desc={`${((female/total)*100 || 0).toFixed(0)}% tổng sĩ số`}
-          color="bg-rose-500"
-        />
+        {/* TIN TỨC & SỰ KIỆN (1/3 chiều rộng) */}
+        <div className="bg-white p-8 rounded-[48px] border border-slate-100 shadow-sm flex flex-col">
+          <h3 className="text-xl font-black mb-6 flex items-center gap-3 text-slate-800">
+            <Newspaper size={24} className="text-indigo-500"/> Tin tức mới
+          </h3>
+          <div className="space-y-4 flex-1 overflow-y-auto max-h-[300px] pr-2 custom-scrollbar">
+            {newsList.map((news: any, idx: number) => (
+              <a 
+                key={idx} 
+                href={news.link} 
+                target="_blank" 
+                className="flex items-start gap-4 p-4 rounded-3xl hover:bg-slate-50 transition-colors group"
+              >
+                <div className="w-2 h-2 rounded-full bg-indigo-500 mt-2 shrink-0"></div>
+                <div>
+                  <div className="font-bold text-slate-700 leading-snug group-hover:text-indigo-600 transition-colors">{news.title}</div>
+                  <div className="text-[10px] text-slate-400 mt-1 flex items-center gap-1 uppercase font-black">
+                    Xem chi tiết <ExternalLink size={10}/>
+                  </div>
+                </div>
+              </a>
+            ))}
+          </div>
+        </div>
       </div>
 
-      {/* Main Table Card */}
-      <div className="bg-white rounded-[48px] shadow-sm border border-slate-100 overflow-hidden">
-        <div className="p-10 border-b border-slate-50 flex justify-between items-center">
-          <div className="flex flex-col md:flex-row md:items-center gap-6">
-            <div className="flex-1">
-              <div className="flex items-center gap-3">
-                <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight">
-                  Tổng hợp thi đua Tuần
-                </h3>
-                
-                {/* NÚT BẤM ĐÃ FIX LOGIC TẠI ĐÂY */}
-                <div className="flex items-center bg-slate-100 rounded-xl p-1 group">
-                  <button 
-                    type="button"
-                    onClick={() => updateWeek(state.currentWeek - 1)}
-                    className="w-8 h-8 flex items-center justify-center text-slate-500 hover:text-indigo-600 font-black transition-colors"
-                  >
-                    -
-                  </button>
-                  <input 
-                    type="number" 
-                    value={state.currentWeek}
-                    onChange={(e) => updateWeek(parseInt(e.target.value) || 1)}
-                    className="w-10 bg-transparent text-center font-black text-indigo-600 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                  />
-                  <button 
-                    type="button"
-                    onClick={() => updateWeek(state.currentWeek + 1)}
-                    className="w-8 h-8 flex items-center justify-center text-slate-500 hover:text-indigo-600 font-black transition-colors"
-                  >
-                    +
-                  </button>
+      {/* 2. BAN CHẤP HÀNH & NÚT XEM DANH SÁCH */}
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        
+        {/* DANH SÁCH BCH */}
+        <div className="lg:col-span-3 bg-white p-8 rounded-[48px] border border-slate-100 shadow-sm">
+          <div className="flex justify-between items-center mb-8">
+            <h3 className="text-xl font-black flex items-center gap-3 text-slate-800">
+              <Award size={24} className="text-amber-500"/> Ban chấp hành lớp
+            </h3>
+            <button 
+              onClick={() => setShowStudentList(true)}
+              className="px-6 py-3 bg-slate-900 text-white rounded-2xl font-black text-xs hover:bg-indigo-600 transition-all shadow-lg flex items-center gap-2"
+            >
+              <Users size={16}/> HỒ SƠ LỚP HỌC
+            </button>
+          </div>
+          
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {bch.map((mem: any, idx: number) => (
+              <div key={idx} className="p-6 rounded-[32px] bg-slate-50 border border-slate-100 text-center group hover:bg-indigo-600 transition-all duration-300">
+                <div className="w-12 h-12 bg-white rounded-2xl shadow-sm mx-auto mb-3 flex items-center justify-center text-indigo-600 group-hover:scale-110 transition-transform">
+                   <UserCircle2 size={24}/>
                 </div>
+                <div className="text-[10px] font-black text-indigo-500 uppercase mb-1 group-hover:text-indigo-200">{mem.position}</div>
+                <div className="font-black text-slate-800 text-sm group-hover:text-white">{mem.name}</div>
+                <div className="text-[10px] text-slate-400 font-mono group-hover:text-indigo-300">{mem.idhs}</div>
               </div>
-              <p className="text-slate-400 text-xs font-bold mt-1 tracking-widest uppercase">Cập nhật thời gian thực</p>
+            ))}
+          </div>
+        </div>
+
+        {/* THỐNG KÊ NHANH */}
+        <div className="bg-rose-500 p-8 rounded-[48px] text-white shadow-xl shadow-rose-100 relative overflow-hidden">
+           <div className="relative z-10">
+             <h3 className="text-lg font-black mb-2 tracking-tight">Kỷ luật tuần này</h3>
+             <div className="text-5xl font-black mb-4">{state.violationLogs?.length || 0}</div>
+             <p className="text-rose-100 text-xs font-bold leading-relaxed">Có sự biến động nhẹ so với tuần trước. Thầy nên lưu ý!</p>
+           </div>
+           <div className="absolute -right-8 -bottom-8 opacity-20 transform rotate-12">
+              <Activity size={150} />
+           </div>
+        </div>
+      </div>
+
+      {/* MODAL DANH SÁCH HỌC SINH KÈM ẢNH */}
+      {showStudentList && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md" onClick={() => setShowStudentList(false)}></div>
+          <div className="bg-white w-full max-w-4xl max-h-[85vh] rounded-[48px] shadow-2xl relative z-10 flex flex-col overflow-hidden">
+            
+            <div className="p-8 border-b border-slate-100 flex justify-between items-center">
+              <div>
+                <h2 className="text-2xl font-black text-slate-800">Hồ sơ lớp học</h2>
+                <p className="text-slate-500 text-xs font-bold">Danh sách chi tiết {state.students.length} học sinh</p>
+              </div>
+              <div className="flex gap-4 items-center">
+                <div className="relative">
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16}/>
+                  <input 
+                    type="text" 
+                    placeholder="Tìm tên, mã HS..." 
+                    className="pl-12 pr-6 py-3 bg-slate-100 rounded-2xl outline-none focus:ring-2 ring-indigo-500 text-sm"
+                    onChange={(e) => setSearchMember(e.target.value)}
+                  />
+                </div>
+                <button onClick={() => setShowStudentList(false)} className="p-3 bg-slate-100 rounded-2xl hover:bg-rose-100 hover:text-rose-500 transition-colors"><X size={20}/></button>
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-8 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 custom-scrollbar">
+              {state.students
+                .filter((s: any) => s.name.toLowerCase().includes(searchMember.toLowerCase()) || s.idhs.includes(searchMember))
+                .map((student: any, idx: number) => (
+                <div key={idx} className="bg-slate-50 rounded-[32px] p-4 border border-slate-100 hover:border-indigo-200 hover:shadow-xl hover:shadow-indigo-500/5 transition-all text-center group">
+                  <div className="w-full aspect-[3/4] rounded-2xl bg-slate-200 mb-4 overflow-hidden shadow-inner">
+                    {student.imglink ? (
+                      <img src={student.imglink} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt={student.name}/>
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-slate-400"><UserCircle2 size={40}/></div>
+                    )}
+                  </div>
+                  <div className="font-black text-slate-800 text-sm">{student.name}</div>
+                  <div className="text-[10px] text-slate-400 font-mono mt-1">{student.idhs}</div>
+                </div>
+              ))}
             </div>
           </div>
-          <div className="flex items-center gap-3">
-             <div className="flex items-center gap-2 text-[10px] font-black text-emerald-600 bg-emerald-50 px-5 py-2.5 rounded-full border border-emerald-100">
-                <TrendingUp size={14}/> Top thi đua
-             </div>
-          </div>
         </div>
+      )}
 
-        <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="bg-slate-50/50">
-                  <th className="px-10 py-6 text-left text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Học sinh</th>
-                  <th className="px-10 py-6 text-center text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Mã HS</th>
-                  <th className="px-10 py-6 text-center text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Hạnh kiểm</th>
-                  <th className="px-10 py-6 text-right text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Điểm Tuần {state.currentWeek}</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-50">
-                {state.students?.length > 0 ? (
-                  state.students.map((s: any) => {
-                    const scoreObj = state.weeklyScores.find((ws: any) => ws.idhs === s.idhs);
-                    const weekScore = scoreObj?.weeks[`w${state.currentWeek}`] ?? 100;
-                    return (
-                      <tr key={s.idhs} className="hover:bg-slate-50/80 transition-all duration-300 group cursor-default">
-                        <td className="px-10 py-7">
-                          <div className="flex items-center gap-4">
-                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-black text-sm ${s.gender === 'Nam' ? 'bg-blue-50 text-blue-500' : 'bg-rose-50 text-rose-500'}`}>
-                              {s.name.charAt(0)}
-                            </div>
-                            <div>
-                              <p className="font-black text-slate-800 text-base">{s.stt}.{s.name}</p>
-                              <p className="text-[10px] text-slate-400 font-bold uppercase">{s.class}</p>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-10 py-7 text-center font-mono text-xs text-slate-400 font-bold">{s.idhs}</td>
-                        <td className="px-10 py-7 text-center">
-                           <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase ${weekScore >= 90 ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>
-                              {weekScore >= 95 ? 'Tốt' : weekScore >= 80 ? 'Khá' : 'Cần rèn luyện'}
-                           </span>
-                        </td>
-                        <td className="px-10 py-7 text-right">
-                          <span className={`inline-block min-w-16 text-center px-6 py-2.5 rounded-2xl font-black text-sm shadow-sm transition-all group-hover:scale-105 ${weekScore >= 100 ? 'bg-slate-900 text-white' : 'bg-rose-500 text-white'}`}>
-                            {weekScore}
-                          </span>
-                        </td>
-                      </tr>
-                    );
-                  })
-                ) : (
-                  <tr>
-                    <td colSpan={4} className="px-10 py-40 text-center">
-                        <div className="flex flex-col items-center gap-6">
-                           <div className="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center text-slate-200 animate-pulse">
-                              <Users size={48} />
-                           </div>
-                           <div className="text-slate-400 font-bold text-lg max-w-sm mx-auto leading-relaxed">
-                              Lớp chưa có dữ liệu học sinh.<br/>
-                              <span className="text-sm font-medium opacity-60 italic">Vui lòng vào "Nhập Danh sách" để tải tệp Excel.</span>
-                           </div>
-                        </div>
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-        </div>
-      </div>
     </div>
   );
 };
-
-function StatCard({ icon, label, value, desc, color }: any) {
-    return (
-        <div className="bg-white p-10 rounded-[48px] shadow-sm border border-slate-100 flex items-center gap-8 transition-all hover:translate-y-[-4px] duration-500 group">
-            <div className={`${color} w-20 h-20 rounded-[32px] flex items-center justify-center text-white shadow-2xl shadow-indigo-100 group-hover:scale-110 transition-transform`}>
-                {icon}
-            </div>
-            <div>
-              <p className="text-slate-400 text-[10px] font-black uppercase tracking-[0.2em] mb-1">{label}</p>
-              <h3 className="text-4xl font-black text-slate-900 tracking-tighter mb-1">{value}</h3>
-              <p className="text-[10px] font-bold text-slate-400 italic">{desc}</p>
-            </div>
-        </div>
-    );
-}
