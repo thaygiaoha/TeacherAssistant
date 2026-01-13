@@ -14,26 +14,47 @@ export const GradingManager = ({ state, setState }: any) => {
 
   // 3. LOGIC TÍNH ĐIỂM & XẾP LOẠI
   const finalGrades = useMemo(() => {
-    // A. Tạo bản đồ tra cứu điểm nhanh
-    const scoreMap: any = {};
-    state.violations.forEach((v: any) => scoreMap[v.codeRule?.toUpperCase()] = -Math.abs(v.points || 0));
-    state.rewards.forEach((r: any) => scoreMap[r.codeRule?.toUpperCase()] = Math.abs(r.points || 0));
-    state.bch.forEach((b: any) => scoreMap[b.codeRule?.toUpperCase()] = Math.abs(b.points || 0));
-
-    // B. Tính điểm thực tế dựa trên logs trong state
+    // A. Tính điểm thực tế dựa trên logs
     let list = state.students.map((student: any) => {
-      let totalScore = 100;
+      let totalScore = 100; // Điểm gốc là 100
+
+      // 1. Tạo bản đồ tra cứu điểm từ bảng lỗi (state.violations)
+      const scoreMap: any = {};
+      state.violations.forEach((v: any) => {
+        scoreMap[v.codeRule?.toUpperCase()] = -Math.abs(v.points || 0);
+      });
       
-      // Tính điểm vi phạm
-      const studentVP = state.violationLogs?.find((l: any) => l.studentId === student.idhs);
-      if (studentVP) {
-        studentVP.codes?.forEach((c: string) => totalScore += (scoreMap[c.toUpperCase()] || 0));
+      // 2. Tạo bản đồ tra cứu điểm từ bảng thưởng & bch
+      state.rewards.forEach((r: any) => {
+        scoreMap[r.codeRule?.toUpperCase()] = Math.abs(r.points || 0);
+      });
+      state.bch.forEach((b: any) => {
+        scoreMap[b.codeRule?.toUpperCase()] = Math.abs(b.points || 0);
+      });
+
+      // 3. Quét danh sách lỗi đã ghi (violationLogs)
+      // Giả sử dữ liệu lỗi của thầy có dạng: { studentId: 'HS01', codes: ['L01', 'L02'] }
+      const myViolations = state.violationLogs?.filter((log: any) => log.studentId === student.idhs);
+      if (myViolations) {
+        myViolations.forEach((log: any) => {
+          if (Array.isArray(log.codes)) {
+            log.codes.forEach((c: string) => {
+              totalScore += (scoreMap[c.toUpperCase()] || 0);
+            });
+          }
+        });
       }
 
-      // Tính điểm thưởng
-      const studentT = state.rewardLogs?.find((l: any) => l.studentId === student.idhs);
-      if (studentT) {
-        studentT.codes?.forEach((c: string) => totalScore += (scoreMap[c.toUpperCase()] || 0));
+      // 4. Quét danh sách thưởng đã ghi (rewardLogs)
+      const myRewards = state.rewardLogs?.filter((log: any) => log.studentId === student.idhs);
+      if (myRewards) {
+        myRewards.forEach((log: any) => {
+          if (Array.isArray(log.codes)) {
+            log.codes.forEach((c: string) => {
+              totalScore += (scoreMap[c.toUpperCase()] || 0);
+            });
+          }
+        });
       }
 
       return { ...student, totalScore };
