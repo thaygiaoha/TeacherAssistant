@@ -30,9 +30,18 @@ export default function App() {
       };
     }
     return {
-      students: [], relatives: [], violations: [], rewards: [],
-      bch: [], weeklyScores: [], violationLogs: [], rewardLogs: [],
-      currentWeek: 1, googleScriptUrl: savedUrl, appPassword: 'admin'
+      students: [],  
+      relatives: [], 
+      violations: [], 
+      rewards: [],
+      bch: [], 
+      weeklyScores: [], 
+      violationLogs: [], 
+      rewardLogs: [],
+      currentWeek: 1, 
+      isSettingsUnlocked: false,
+      googleScriptUrl: savedUrl, 
+      appPassword: 'a0988948882A@'
     };
   });
 
@@ -173,45 +182,90 @@ export default function App() {
           {activeTab === 'rewards' && <RewardManager state={state} setState={setState} />}
           {activeTab === 'grading' && <GradingManager state={state} setState={setState} />}
           
-          {activeTab === 'settings' && (
+         {activeTab === 'settings' && (
             <div className="bg-white p-12 rounded-[48px] shadow-sm border border-slate-100 animate-in fade-in slide-in-from-bottom-4">
               <h2 className="text-3xl font-black mb-8 flex items-center gap-4 text-slate-800">
                 <Settings size={32} className="text-slate-400"/> Cấu hình hệ thống
               </h2>
-              
+
               <div className="space-y-8 max-w-2xl">
-                <div>
-                  <label className="block text-[10px] font-black text-slate-400 uppercase mb-3 ml-2 tracking-widest">Mật khẩu xác thực (Admin)</label>
-                  <input type="password" placeholder="Nhập mật khẩu..." id="adminPass" className="w-full p-5 bg-slate-50 border-2 border-slate-100 rounded-[24px] outline-none focus:border-indigo-500 font-mono text-sm transition-all" />
-                </div>
+                {/* LỚP BẢO MẬT 1: NHẬP MẬT KHẨU ĐỂ MỞ CẤU HÌNH */}
+                {!state.isSettingsUnlocked ? (
+                  <div className="p-8 bg-slate-50 rounded-[32px] border-2 border-dashed border-slate-200 text-center">
+                    <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-sm text-slate-400">
+                      <Settings size={28} />
+                    </div>
+                    <h3 className="font-black text-slate-800 mb-2">Yêu cầu xác thực</h3>
+                    <p className="text-xs text-slate-500 mb-6">Nhập mật khẩu Admin để xem và thay đổi Link hệ thống</p>
+                    
+                    <div className="flex gap-2">
+                      <input 
+                        type="password" 
+                        id="unlockPass" 
+                        placeholder="Mật khẩu Admin..."
+                        className="flex-1 p-4 bg-white border border-slate-200 rounded-2xl outline-none focus:border-indigo-500 font-mono text-center"
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            const val = (e.currentTarget as HTMLInputElement).value;
+                            if(val === '123') setState(prev => ({...prev, isSettingsUnlocked: true}));
+                            else alert('❌ Sai mật khẩu!');
+                          }
+                        }}
+                      />
+                      <button 
+                        onClick={() => {
+                          const val = (document.getElementById('unlockPass') as HTMLInputElement).value;
+                          if(val === '123') setState(prev => ({...prev, isSettingsUnlocked: true}));
+                          else alert('❌ Sai mật khẩu!');
+                        }}
+                        className="px-6 bg-slate-900 text-white rounded-2xl font-black text-xs hover:bg-indigo-600 transition-all"
+                      >
+                        XÁC THỰC
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  /* LỚP BẢO MẬT 2: HIỆN THÔNG TIN KHI ĐÃ MỞ KHÓA */
+                  <div className="space-y-8 animate-in zoom-in-95 duration-300">
+                    <div className="flex justify-between items-end mb-2">
+                      <label className="text-[10px] font-black text-slate-400 uppercase ml-2 tracking-widest">Link Google Script (Đã mở khóa)</label>
+                      <button 
+                        onClick={() => setState(prev => ({...prev, isSettingsUnlocked: false}))}
+                        className="text-[10px] font-black text-rose-500 uppercase hover:underline"
+                      >
+                        Đóng cấu hình
+                      </button>
+                    </div>
+                    
+                    <div className="relative">
+                      <input 
+                        type="text" 
+                        value={state.googleScriptUrl}
+                        onChange={(e) => setState(prev => ({...prev, googleScriptUrl: e.target.value}))}
+                        placeholder="https://script.google.com/macros/s/.../exec"
+                        className="w-full p-5 bg-indigo-50/50 border-2 border-indigo-100 rounded-[24px] outline-none focus:border-indigo-500 font-mono text-sm text-indigo-900 shadow-inner"
+                      />
+                    </div>
 
-                <hr className="border-slate-100" />
+                    <div className="p-6 bg-amber-50 rounded-[24px] border border-amber-100">
+                      <p className="text-amber-700 text-[11px] font-bold flex items-start gap-3">
+                        <AlertCircle size={16} className="shrink-0 mt-0.5"/>
+                        <span>Lưu ý: Chỉ thay đổi Link khi bạn triển khai phiên bản Script mới. Sau khi lưu, App sẽ tự động đồng bộ lại toàn bộ bảng lỗi và dữ liệu từ Sheet.</span>
+                      </p>
+                    </div>
 
-                <div>
-                  <label className="block text-[10px] font-black text-slate-400 uppercase mb-3 ml-2 tracking-widest">Link Google Script (Deployment URL)</label>
-                  <input 
-                    type="text" 
-                    value={state.googleScriptUrl}
-                    onChange={(e) => setState(prev => ({...prev, googleScriptUrl: e.target.value}))}
-                    placeholder="https://script.google.com/macros/s/.../exec"
-                    className="w-full p-5 bg-slate-50 border-2 border-slate-100 rounded-[24px] outline-none focus:border-indigo-500 font-mono text-sm transition-all"
-                  />
-                </div>
-
-                <button 
-                  onClick={() => {
-                    const passInput = document.getElementById('adminPass') as HTMLInputElement;
-                    if(passInput.value === 'a0988948882A@') {
-                      localStorage.setItem('saved_script_url', state.googleScriptUrl);
-                      fetchCloudData(state.googleScriptUrl); // Tải lại dữ liệu ngay lập tức với link mới
-                    } else {
-                      alert('❌ Sai mật khẩu!');
-                    }
-                  }}
-                  className="w-full py-6 bg-slate-900 text-white rounded-[24px] font-black text-lg flex items-center justify-center gap-3 hover:bg-indigo-600 transition-all shadow-xl shadow-indigo-200"
-                >
-                  <Save size={20} /> LƯU & ĐỒNG BỘ NGAY
-                </button>
+                    <button 
+                      onClick={() => {
+                        localStorage.setItem('saved_script_url', state.googleScriptUrl);
+                        fetchCloudData(state.googleScriptUrl);
+                        setState(prev => ({...prev, isSettingsUnlocked: false})); // Khóa lại sau khi lưu thành công
+                      }}
+                      className="w-full py-6 bg-indigo-600 text-white rounded-[24px] font-black text-lg flex items-center justify-center gap-3 hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-100"
+                    >
+                      <Save size={20} /> LƯU & KHÓA CẤU HÌNH
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           )}
