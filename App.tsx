@@ -58,7 +58,11 @@ export default function App() {
             ...prev,            
             violations: data.violations || [], // Cập nhật bảng lỗi vào state
             rewards: data.rewards || [],     // <--- Lưu danh sách thưởng
-            bch: data.bchList || []      // <--- Lưu danh sách BCH
+            bch: data.bchList || [],            // <--- Lưu danh sách BCH
+            violationLogs: data.violationLogs || [], 
+            rewardLogs: data.rewardLogs || [],
+            weeklyScores: data.weeklyScores || [],
+            allRanks: data.allRanks || []
           }));
         }
       } catch (error) {
