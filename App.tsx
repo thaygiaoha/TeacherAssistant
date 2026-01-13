@@ -73,8 +73,7 @@ export default function App() {
         rewardLogs: data.rewardLogs || [],
         weeklyScores: data.weeklyScores || [],
         allRanks: data.allRanks || []
-      }));
-      alert("✅ Đã đồng bộ dữ liệu mới nhất!");
+      }));     
     } catch (error) {
       alert("❌ Lỗi kết nối Google Sheets!");
     } finally {
@@ -139,7 +138,7 @@ export default function App() {
     <UserCheck size={14} strokeWidth={2.5} />
   </div>
   <div>
-    <p className="text-[12px] text-slate-800 font-black uppercase tracking-widest leading-none mb-1">GV Chủ Nhiệm</p>
+    <p className="text-[12px] text-slate-300 font-black uppercase tracking-widest leading-none mb-1">GV Chủ Nhiệm</p>
     <p className="text-xs text-slate-500 font-bold tracking-wide leading-none">{state.gvcnName}</p>
   </div>
 </div>
