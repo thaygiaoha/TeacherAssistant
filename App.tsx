@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { 
   LayoutDashboard, Users, UserCheck, AlertCircle, 
-  Gift, Trophy, Settings, RotateCcw, ChevronRight, Save, CloudDownload
+  Gift, Trophy, Settings, RotateCcw, Save, CloudDownload,
+  GraduationCap 
 } from 'lucide-react';
 
 import { Dashboard } from './components/Dashboard';
@@ -11,11 +12,6 @@ import { ActionCenter } from './components/ActionCenter';
 import { RewardManager } from './components/RewardManager';
 import { GradingManager } from './components/GradingManager';
 import { AppState } from './types';
-import { 
-  LayoutDashboard, Users, UserCheck, AlertCircle, 
-  Gift, Trophy, Settings, RotateCcw, ChevronRight, Save, CloudDownload,
-  GraduationCap // <-- Thêm cái này vào
-} from 'lucide-react';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -23,7 +19,6 @@ export default function App() {
   
   const [state, setState] = useState<AppState>(() => {   
     const saved = localStorage.getItem('gvcn_state_v3');
-    // Lấy link đã lưu riêng lẻ để đảm bảo cập nhật
     const savedUrl = localStorage.getItem('saved_script_url') || '';
     
     if (saved) {
@@ -31,18 +26,13 @@ export default function App() {
       return {
         ...parsed,
         googleScriptUrl: savedUrl || parsed.googleScriptUrl || '',
+        isSettingsUnlocked: false, // Luôn khóa khi khởi động
         currentWeek: Number(parsed.currentWeek) || 1 
       };
     }
     return {
-      students: [],  
-      relatives: [], 
-      violations: [], 
-      rewards: [],
-      bch: [], 
-      weeklyScores: [], 
-      violationLogs: [], 
-      rewardLogs: [],
+      students: [], relatives: [], violations: [], rewards: [], bch: [], 
+      weeklyScores: [], violationLogs: [], rewardLogs: [],
       currentWeek: 1, 
       isSettingsUnlocked: false,
       googleScriptUrl: savedUrl, 
@@ -50,23 +40,18 @@ export default function App() {
     };
   });
 
-  // 1. Tự động lưu dữ liệu vào máy tính (LocalStorage)
+  // Lưu state vào local
   useEffect(() => {
     localStorage.setItem('gvcn_state_v3', JSON.stringify(state));
   }, [state]);
 
-  // 2. Hàm kéo dữ liệu (Em tách riêng để thầy bấm nút cho chắc)
-  // CHỈ CHẠY 1 LẦN KHI MỞ APP
+  // CHỈ TỰ ĐỘNG TẢI 1 LẦN KHI MỞ APP
   useEffect(() => {
-    const initLoad = async () => {
-      // Nếu đã có link lưu trong máy thì mới tự động tải
-      if (state.googleScriptUrl) {
-        await fetchCloudData(); 
-      }
-    };
-    initLoad();
-    // Quan trọng: Để ngoặc vuông rỗng [] để không bị lặp vô tận
-  }, []);
+    if (state.googleScriptUrl) {
+      fetchCloudData(); 
+    }
+  }, []); // Ngoặc vuông rỗng để tránh lặp vô tận
+
   const fetchCloudData = async (targetUrl?: string) => {
     const url = targetUrl || state.googleScriptUrl;
     if (!url) return;
@@ -86,23 +71,12 @@ export default function App() {
         weeklyScores: data.weeklyScores || [],
         allRanks: data.allRanks || []
       }));
-      alert("✅ Đã đồng bộ dữ liệu mới nhất từ Google Sheets!");
+      alert("✅ Đã đồng bộ dữ liệu mới nhất!");
     } catch (error) {
-      console.error("Lỗi fetch:", error);
-      alert("❌ Lỗi: Không thể tải dữ liệu. Kiểm tra lại Link hoặc quyền truy cập Script!");
+      alert("❌ Lỗi kết nối Google Sheets!");
     } finally {
       setIsLoading(false);
     }
-  };
-
-  // Tự động load khi mở App nếu đã có Link
-  useEffect(() => {
-    if (state.googleScriptUrl) fetchCloudData();
-  }, []);
-
-  const validatePass = (action: string) => {
-    const input = prompt(`[BẢO MẬT] Nhập mật khẩu để truy cập "${action}":`);
-    return input === state.appPassword || input === "admin";
   };
 
   const checkAccess = (id: string, label: string) => {
@@ -110,7 +84,8 @@ export default function App() {
       setActiveTab(id);
       return;
     }
-    if (validatePass(label)) {
+    const input = prompt(`[BẢO MẬT] Nhập mật khẩu để truy cập "${label}":`);
+    if (input === state.appPassword || input === "admin") {
       setActiveTab(id);
     } else {
       alert("❌ Mật khẩu không chính xác!");
@@ -118,8 +93,9 @@ export default function App() {
   };
 
   const handleReset = () => {
-    if (confirm(`⚠️ Bạn muốn RESET sang Tuần ${state.currentWeek + 1}?`)) {
-      if (validatePass("Reset Tuần")) {
+    if (confirm(`⚠️ Chuyển sang Tuần ${state.currentWeek + 1}?`)) {
+      const input = prompt("Nhập mật khẩu Admin:");
+      if (input === "admin" || input === state.appPassword) {
         setState(prev => ({
           ...prev,
           currentWeek: prev.currentWeek + 1,
@@ -131,81 +107,63 @@ export default function App() {
     }
   };
 
- const menu = [
-  { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, color: 'text-blue-400', bg: 'bg-blue-400/10' },
-  { id: 'import', label: 'Nhập Danh sách', icon: Users, color: 'text-cyan-400', bg: 'bg-cyan-400/10' },
-  { id: 'attendance', label: 'Điểm danh', icon: UserCheck, color: 'text-emerald-400', bg: 'bg-emerald-400/10' },
-  { id: 'actions', label: 'Nhập Lỗi', icon: AlertCircle, color: 'text-rose-500', bg: 'bg-rose-500/10' },
-  { id: 'rewards', label: 'Nhập Thưởng', icon: Gift, color: 'text-amber-400', bg: 'bg-amber-400/10' },
-  { id: 'grading', label: 'Xếp loại', icon: Trophy, color: 'text-indigo-400', bg: 'bg-indigo-400/10' },
-  { id: 'settings', label: 'Cài đặt Link', icon: Settings, color: 'text-slate-400', bg: 'bg-slate-400/10' },
-];
+  const menu = [
+    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, color: 'text-blue-400', bg: 'bg-blue-400/10' },
+    { id: 'import', label: 'Nhập Danh sách', icon: Users, color: 'text-cyan-400', bg: 'bg-cyan-400/10' },
+    { id: 'attendance', label: 'Điểm danh', icon: UserCheck, color: 'text-emerald-400', bg: 'bg-emerald-400/10' },
+    { id: 'actions', label: 'Nhập Lỗi', icon: AlertCircle, color: 'text-rose-500', bg: 'bg-rose-500/10' },
+    { id: 'rewards', label: 'Nhập Thưởng', icon: Gift, color: 'text-amber-400', bg: 'bg-amber-400/10' },
+    { id: 'grading', label: 'Xếp loại', icon: Trophy, color: 'text-indigo-400', bg: 'bg-indigo-400/10' },
+    { id: 'settings', label: 'Cài đặt Link', icon: Settings, color: 'text-slate-400', bg: 'bg-slate-400/10' },
+  ];
 
   return (
     <div className="flex min-h-screen bg-slate-50">
-           {/* Sidebar */}
       <aside className="w-80 bg-[#0F172A] text-white flex flex-col fixed inset-y-0 shadow-2xl z-50">
         <div className="p-8">
-          {/* LOGO MỚI TINH GỌN */}
           <div className="flex items-center gap-4 mb-6">
-            <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-indigo-700 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-500/20 transform -rotate-3 hover:rotate-0 transition-transform duration-300">
-              <GraduationCap size={28} className="text-white" strokeWidth={2.5} />
+            <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-indigo-700 rounded-2xl flex items-center justify-center shadow-lg transform -rotate-3">
+              <GraduationCap size={28} className="text-white" />
             </div>
             <div>
-              <h1 className="font-extrabold text-xl tracking-tight uppercase text-white leading-none">Teacher</h1>
+              <h1 className="font-extrabold text-xl tracking-tight text-white leading-none">Teacher</h1>
               <p className="text-[10px] text-indigo-400 font-black uppercase tracking-[0.2em] mt-1">Assistant</p>
             </div>
           </div>
-
-          <div className="h-px w-full bg-gradient-to-r from-transparent via-slate-700 to-transparent mb-4 opacity-50" />
-          
+          <div className="h-px w-full bg-slate-700 mb-4 opacity-50" />
           <p className="text-[10px] text-slate-500 font-bold uppercase tracking-[0.2em] ml-1 mb-2">GVCN: Nguyễn Văn Hà</p>
-        </div>         
-        
-       <nav className="flex-1 px-4 space-y-2 mt-4">
-  {menu.map((item) => (
-    <button
-      key={item.id}
-      onClick={() => checkAccess(item.id, item.label)}
-      className={`w-full flex items-center justify-between px-5 py-4 rounded-2xl transition-all ${
-        activeTab === item.id 
-        ? 'bg-white/10 text-white shadow-lg border border-white/5' // Khi active: Nền sáng nhẹ lên
-        : 'text-slate-400 hover:bg-white/5 hover:text-white'
-      }`}
-    >
-      <div className="flex items-center gap-4">
-        {/* Phần Icon sẽ có màu riêng biệt ở đây */}
-        <div className={`p-2 rounded-lg ${activeTab === item.id ? 'bg-white/10' : ''}`}>
-          <item.icon size={20} className={item.color} /> 
         </div>
-        <span className={`text-sm font-bold ${activeTab === item.id ? 'text-white' : 'text-slate-400'}`}>
-          {item.label}
-        </span>
-      </div>
-      
-      {activeTab === item.id && (
-        <div className="w-1.5 h-1.5 rounded-full bg-indigo-400 shadow-[0_0_8px_rgba(129,140,248,0.8)]"></div>
-      )}
-    </button>
-  ))}
-</nav>
 
-        <div className="p-6 bg-slate-900/50 mt-auto border-t border-white/5">
-          <button 
-            onClick={() => fetchCloudData()}
-            disabled={isLoading}
-            className="w-full mb-4 flex items-center justify-center gap-3 py-3 rounded-xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 font-bold text-xs hover:bg-indigo-500 hover:text-white transition-all"
-          >
+        <nav className="flex-1 px-4 space-y-2">
+          {menu.map((item) => (
+            <button
+              key={item.id}
+              onClick={() => checkAccess(item.id, item.label)}
+              className={`w-full flex items-center justify-between px-5 py-4 rounded-2xl transition-all ${
+                activeTab === item.id ? 'bg-white/10 text-white shadow-lg' : 'text-slate-400 hover:bg-white/5 hover:text-white'
+              }`}
+            >
+              <div className="flex items-center gap-4">
+                <div className={`p-2 rounded-lg ${activeTab === item.id ? 'bg-white/10' : ''}`}>
+                  <item.icon size={20} className={item.color} /> 
+                </div>
+                <span className="text-sm font-bold">{item.label}</span>
+              </div>
+              {activeTab === item.id && <div className="w-1.5 h-1.5 rounded-full bg-indigo-400 shadow-[0_0_8px_#818cf8]"></div>}
+            </button>
+          ))}
+        </nav>
+
+        <div className="p-6 mt-auto border-t border-white/5 space-y-3">
+          <button onClick={() => fetchCloudData()} disabled={isLoading} className="w-full flex items-center justify-center gap-3 py-3 rounded-xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 font-bold text-xs hover:bg-indigo-500 hover:text-white transition-all">
             <CloudDownload size={16} /> {isLoading ? "ĐANG TẢI..." : "ĐỒNG BỘ CLOUD"}
           </button>
-          
           <button onClick={handleReset} className="w-full flex items-center justify-center gap-3 py-3 rounded-xl bg-rose-500/10 text-rose-500 border border-rose-500/20 font-bold text-xs hover:bg-rose-500 hover:text-white transition-all">
             <RotateCcw size={16} /> RESET TUẦN
           </button>
         </div>
       </aside>
 
-      {/* Main Content */}
       <main className="flex-1 ml-80 p-10 min-h-screen">
         <div className="max-w-7xl mx-auto">
           {activeTab === 'dashboard' && <Dashboard state={state} setState={setState} />}
@@ -215,86 +173,78 @@ export default function App() {
           {activeTab === 'rewards' && <RewardManager state={state} setState={setState} />}
           {activeTab === 'grading' && <GradingManager state={state} setState={setState} />}
           
-         {activeTab === 'settings' && (
+          {activeTab === 'settings' && (
             <div className="bg-white p-12 rounded-[48px] shadow-sm border border-slate-100 animate-in fade-in slide-in-from-bottom-4">
               <h2 className="text-3xl font-black mb-8 flex items-center gap-4 text-slate-800">
                 <Settings size={32} className="text-slate-400"/> Cấu hình hệ thống
               </h2>
 
-              <div className="space-y-8 max-w-2xl">
-                {/* LỚP BẢO MẬT 1: NHẬP MẬT KHẨU ĐỂ MỞ CẤU HÌNH */}
+              <div className="max-w-2xl">
                 {!state.isSettingsUnlocked ? (
-                  <div className="p-8 bg-slate-50 rounded-[32px] border-2 border-dashed border-slate-200 text-center">
-                    <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-sm text-slate-400">
-                      <Settings size={28} />
+                  <div className="p-12 bg-slate-50 rounded-[40px] border-2 border-dashed border-slate-200 text-center">
+                    <div className="w-20 h-20 bg-white rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-sm">
+                      <Settings size={32} className="text-slate-300" />
                     </div>
-                    <h3 className="font-black text-slate-800 mb-2">Yêu cầu xác thực</h3>
-                    <p className="text-xs text-slate-500 mb-6">Nhập mật khẩu Admin để xem và thay đổi Link hệ thống</p>
+                    <h3 className="text-xl font-black text-slate-800 mb-2">Xác thực Admin</h3>
+                    <p className="text-sm text-slate-400 mb-8 font-medium">Vui lòng nhập mật khẩu để quản lý Link Script</p>
                     
-                    <div className="flex gap-2">
+                    <div className="flex gap-3">
                       <input 
                         type="password" 
-                        id="unlockPass" 
-                        placeholder="Mật khẩu Admin..."
-                        className="flex-1 p-4 bg-white border border-slate-200 rounded-2xl outline-none focus:border-indigo-500 font-mono text-center"
+                        id="unlockPassInput"
+                        placeholder="Mật khẩu..."
+                        className="flex-1 p-5 bg-white border border-slate-200 rounded-[24px] outline-none focus:ring-4 ring-indigo-50 font-mono text-center"
                         onKeyDown={(e) => {
                           if (e.key === 'Enter') {
                             const val = (e.currentTarget as HTMLInputElement).value;
-                            if(val === '0988948882A@') setState(prev => ({...prev, isSettingsUnlocked: true}));
+                            if(val === '123') setState(prev => ({...prev, isSettingsUnlocked: true}));
                             else alert('❌ Sai mật khẩu!');
                           }
                         }}
                       />
-                     <button 
-  onClick={async () => {
-    const passInput = document.getElementById('adminPass') as HTMLInputElement;
-    if(passInput.value === '123') { // Mật khẩu của thầy
-      // 1. Lưu link vào máy
-      localStorage.setItem('saved_script_url', state.googleScriptUrl);
-      
-      // 2. Gọi hàm tải dữ liệu ngay lập tức
-      await fetchCloudData(state.googleScriptUrl);
-      
-      // 3. Khóa màn hình cài đặt lại cho bảo mật
-      setState(prev => ({...prev, isSettingsUnlocked: false}));
-      
-      alert('✅ Đã lưu cấu hình và đồng bộ dữ liệu thành công!');
-    } else {
-      alert('❌ Mật khẩu admin không đúng!');
-    }
-  }}
-  className="w-full py-6 bg-slate-900 text-white rounded-[24px] font-black text-lg flex items-center justify-center gap-3 hover:bg-indigo-600 transition-all shadow-xl"
->
-  <Save size={20} /> LƯU & ĐỒNG BỘ NGAY
-</button>
+                      <button 
+                        onClick={() => {
+                          const val = (document.getElementById('unlockPassInput') as HTMLInputElement).value;
+                          if(val === '123') setState(prev => ({...prev, isSettingsUnlocked: true}));
+                          else alert('❌ Sai mật khẩu!');
+                        }}
+                        className="px-8 bg-slate-900 text-white rounded-[24px] font-black hover:bg-indigo-600 transition-all shadow-lg shadow-slate-200"
+                      >
+                        MỞ KHÓA
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-8 animate-in zoom-in-95">
+                    <div className="flex justify-between items-center">
+                      <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-2">Google Script URL</label>
+                      <button onClick={() => setState(prev => ({...prev, isSettingsUnlocked: false}))} className="text-xs font-bold text-rose-500 hover:underline">Hủy chỉnh sửa</button>
                     </div>
                     
-                    <div className="relative">
-                      <input 
-                        type="text" 
-                        value={state.googleScriptUrl}
-                        onChange={(e) => setState(prev => ({...prev, googleScriptUrl: e.target.value}))}
-                        placeholder="https://script.google.com/macros/s/.../exec"
-                        className="w-full p-5 bg-indigo-50/50 border-2 border-indigo-100 rounded-[24px] outline-none focus:border-indigo-500 font-mono text-sm text-indigo-900 shadow-inner"
-                      />
-                    </div>
+                    <input 
+                      type="text" 
+                      value={state.googleScriptUrl}
+                      onChange={(e) => setState(prev => ({...prev, googleScriptUrl: e.target.value}))}
+                      placeholder="Dán link script tại đây..."
+                      className="w-full p-6 bg-indigo-50/50 border-2 border-indigo-100 rounded-[32px] outline-none focus:border-indigo-500 font-mono text-sm text-indigo-900 shadow-inner"
+                    />
 
-                    <div className="p-6 bg-amber-50 rounded-[24px] border border-amber-100">
-                      <p className="text-amber-700 text-[11px] font-bold flex items-start gap-3">
-                        <AlertCircle size={16} className="shrink-0 mt-0.5"/>
-                        <span>Lưu ý: Chỉ thay đổi Link khi bạn triển khai phiên bản Script mới. Sau khi lưu, App sẽ tự động đồng bộ lại toàn bộ bảng lỗi và dữ liệu từ Sheet.</span>
+                    <div className="p-6 bg-amber-50 rounded-[32px] border border-amber-100 flex gap-4">
+                      <AlertCircle className="text-amber-500 shrink-0" size={24} />
+                      <p className="text-amber-700 text-xs font-bold leading-relaxed">
+                        Cẩn trọng: Việc thay đổi Link sẽ làm thay đổi toàn bộ nguồn dữ liệu. Hãy đảm bảo bạn đã triển khai Script đúng cách.
                       </p>
                     </div>
 
                     <button 
-                      onClick={() => {
+                      onClick={async () => {
                         localStorage.setItem('saved_script_url', state.googleScriptUrl);
-                        fetchCloudData(state.googleScriptUrl);
-                        setState(prev => ({...prev, isSettingsUnlocked: false})); // Khóa lại sau khi lưu thành công
+                        await fetchCloudData(state.googleScriptUrl);
+                        setState(prev => ({...prev, isSettingsUnlocked: false}));
                       }}
-                      className="w-full py-6 bg-indigo-600 text-white rounded-[24px] font-black text-lg flex items-center justify-center gap-3 hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-100"
+                      className="w-full py-6 bg-indigo-600 text-white rounded-[32px] font-black text-lg flex items-center justify-center gap-3 hover:bg-indigo-700 transition-all shadow-2xl shadow-indigo-200"
                     >
-                      <Save size={20} /> LƯU & KHÓA CẤU HÌNH
+                      <Save size={24} /> LƯU & CẬP NHẬT NGAY
                     </button>
                   </div>
                 )}
