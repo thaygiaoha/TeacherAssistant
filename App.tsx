@@ -54,34 +54,43 @@ export default function App() {
     }
   }, []); // Ngoặc vuông rỗng để tránh lặp vô tận
 
-  const fetchCloudData = async (targetUrl?: string) => {
-    const url = targetUrl || state.googleScriptUrl;
-    if (!url) return;
-    
-    setIsLoading(true);
-    try {
-      const response = await fetch(`${url}?action=get_initial_data`);
-      const data = await response.json();
-      
-      setState(prev => ({
-        ...prev,   
-        gvcnName: data.gvcnName || 'Chưa cập nhật',
-        appPassword: data.cloudPassword,
+  const fetchCloudData = async () => {
+
+  const response = await fetch(`${API_URL}?action=get_initial_data`);
+
+  const data = await response.json();
+
+  if (data.appPassword) {
+
+    setState(prev => ({
+
+      ...prev,
+
+      appPassword: data.appPassword, // Cập nhật mật khẩu từ ô F2 vào đây
+
+      gvcnName: data.gvcnName || 'Chưa cập nhật',
+
+        
+
         violations: data.violations || [],
+
         rewards: data.rewards || [],
+
         bch: data.bchList || [],
+
         violationLogs: data.violationLogs || [], 
+
         rewardLogs: data.rewardLogs || [],
+
         weeklyScores: data.weeklyScores || [],
+
         allRanks: data.allRanks || []
-      }));     
-      
-    } catch (error) {
-      alert("❌ Lỗi kết nối Google Sheets!");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+
+    }));
+
+  }
+
+};
 
   const checkAccess = (id: string, label: string) => {
     if (id === 'dashboard' || id === 'settings') {
