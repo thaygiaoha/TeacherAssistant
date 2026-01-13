@@ -56,6 +56,17 @@ export default function App() {
   }, [state]);
 
   // 2. Hàm kéo dữ liệu (Em tách riêng để thầy bấm nút cho chắc)
+  // CHỈ CHẠY 1 LẦN KHI MỞ APP
+  useEffect(() => {
+    const initLoad = async () => {
+      // Nếu đã có link lưu trong máy thì mới tự động tải
+      if (state.googleScriptUrl) {
+        await fetchCloudData(); 
+      }
+    };
+    initLoad();
+    // Quan trọng: Để ngoặc vuông rỗng [] để không bị lặp vô tận
+  }, []);
   const fetchCloudData = async (targetUrl?: string) => {
     const url = targetUrl || state.googleScriptUrl;
     if (!url) return;
@@ -234,29 +245,28 @@ export default function App() {
                           }
                         }}
                       />
-                      <button 
-                        onClick={() => {
-                          const val = (document.getElementById('unlockPass') as HTMLInputElement).value;
-                          if(val === '0988948882A@') setState(prev => ({...prev, isSettingsUnlocked: true}));
-                          else alert('❌ Sai mật khẩu!');
-                        }}
-                        className="px-6 bg-slate-900 text-white rounded-2xl font-black text-xs hover:bg-indigo-600 transition-all"
-                      >
-                        XÁC THỰC
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  /* LỚP BẢO MẬT 2: HIỆN THÔNG TIN KHI ĐÃ MỞ KHÓA */
-                  <div className="space-y-8 animate-in zoom-in-95 duration-300">
-                    <div className="flex justify-between items-end mb-2">
-                      <label className="text-[10px] font-black text-slate-400 uppercase ml-2 tracking-widest">Link Google Script (Đã mở khóa)</label>
-                      <button 
-                        onClick={() => setState(prev => ({...prev, isSettingsUnlocked: false}))}
-                        className="text-[10px] font-black text-rose-500 uppercase hover:underline"
-                      >
-                        Đóng cấu hình
-                      </button>
+                     <button 
+  onClick={async () => {
+    const passInput = document.getElementById('adminPass') as HTMLInputElement;
+    if(passInput.value === '123') { // Mật khẩu của thầy
+      // 1. Lưu link vào máy
+      localStorage.setItem('saved_script_url', state.googleScriptUrl);
+      
+      // 2. Gọi hàm tải dữ liệu ngay lập tức
+      await fetchCloudData(state.googleScriptUrl);
+      
+      // 3. Khóa màn hình cài đặt lại cho bảo mật
+      setState(prev => ({...prev, isSettingsUnlocked: false}));
+      
+      alert('✅ Đã lưu cấu hình và đồng bộ dữ liệu thành công!');
+    } else {
+      alert('❌ Mật khẩu admin không đúng!');
+    }
+  }}
+  className="w-full py-6 bg-slate-900 text-white rounded-[24px] font-black text-lg flex items-center justify-center gap-3 hover:bg-indigo-600 transition-all shadow-xl"
+>
+  <Save size={20} /> LƯU & ĐỒNG BỘ NGAY
+</button>
                     </div>
                     
                     <div className="relative">
