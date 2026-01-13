@@ -122,35 +122,37 @@ export default function App() {
   return (
     <div className="flex min-h-screen bg-slate-50">
       <aside className="w-80 bg-[#0F172A] text-white flex flex-col fixed inset-y-0 shadow-2xl z-50">
-        <div className="p-8">
-          <div className="flex items-center gap-4 mb-6">
-            <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-indigo-700 rounded-2xl flex items-center justify-center shadow-lg transform -rotate-3">
-              <GraduationCap size={28} className="text-white" />
-            </div>
-            <div>
-              <h1 className="font-extrabold text-xl tracking-tight text-white leading-none">Teacher</h1>
-              <p className="text-[10px] text-indigo-400 font-black uppercase tracking-[0.2em] mt-1">Assistant</p>
-            </div>
-          </div>
-          <div className="h-px w-full bg-slate-700 mb-4 opacity-50" />
-         <div className="mt-2 ml-1 px-3 py-2 bg-white/5 rounded-xl border border-white/5 flex items-center gap-3 group hover:bg-white/10 transition-all duration-300">
-  <div className="w-6 h-6 rounded-lg bg-indigo-500/20 flex items-center justify-center text-indigo-400 group-hover:bg-indigo-500 group-hover:text-white transition-all">
-    <UserCheck size={14} strokeWidth={2.5} />
+  <div className="p-8">
+    {/* LOGO CHÍNH */}
+    <div className="flex items-center gap-4 mb-6">
+      <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-indigo-700 rounded-2xl flex items-center justify-center shadow-lg transform -rotate-3">
+        <GraduationCap size={28} className="text-white" />
+      </div>
+      <div>
+        <h1 className="font-extrabold text-xl tracking-tight text-white leading-none">Teacher</h1>
+        <p className="text-[10px] text-indigo-400 font-black uppercase tracking-[0.2em] mt-1">Assistant</p>
+      </div>
+    </div>
+
+    {/* ĐƯỜNG KẺ NGANG */}
+    <div className="h-px w-full bg-slate-700 mb-6 opacity-50" />
+
+    {/* KHỐI TÊN GVCN - DUY NHẤT & NỔI BẬT */}
+    <div className="px-4 py-3 bg-gradient-to-r from-indigo-500/15 via-indigo-500/5 to-transparent rounded-[24px] border border-indigo-500/20 flex items-center gap-4 group transition-all duration-300 hover:border-indigo-500/40 shadow-sm">
+      <div className="w-10 h-10 shrink-0 rounded-2xl bg-gradient-to-br from-indigo-500 to-indigo-700 flex items-center justify-center text-white shadow-lg shadow-indigo-500/30 transform group-hover:scale-110 transition-transform duration-300">
+        <UserCheck size={22} strokeWidth={2.5} />
+      </div>
+      <div className="flex flex-col min-w-0">
+        <p className="text-[9px] text-indigo-400 font-black uppercase tracking-[0.2em] leading-none mb-1.5">Giáo viên chủ nhiệm</p>
+        <p className="text-sm text-white font-extrabold tracking-wide truncate group-hover:text-indigo-300 transition-colors">
+          {state.gvcnName || "NGUYỄN VĂN HÀ"}
+        </p>
+      </div>
+    </div>
   </div>
-  {/* KHỐI TÊN GVCN - TO, SÁNG, ĐẲNG CẤP */}
-<div className="mt-4 mx-2 px-4 py-3 bg-gradient-to-r from-indigo-500/10 via-indigo-500/5 to-transparent rounded-[20px] border border-indigo-500/20 flex items-center gap-4 group transition-all duration-300 hover:border-indigo-500/40 shadow-sm">
-  <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-indigo-500 to-indigo-700 flex items-center justify-center text-white shadow-lg shadow-indigo-500/30 transform group-hover:scale-110 transition-transform duration-300">
-    <UserCheck size={22} strokeWidth={2.5} />
-  </div>
-  <div className="flex flex-col">
-    <p className="text-[10px] text-indigo-400 font-black uppercase tracking-[0.2em] leading-none mb-1.5">Giáo viên chủ nhiệm</p>
-    <p className="text-sm text-white font-extrabold tracking-wide drop-shadow-sm group-hover:text-indigo-300 transition-colors">
-      {state.gvcnName || "NGUYỄN VĂN HÀ"}
-    </p>
-  </div>
-</div>
-</div>
-        </div>
+  
+  {/* Phần menu nav sẽ tiếp tục ở dưới này... */}
+</aside>
 
         <nav className="flex-1 px-4 space-y-2">
           {menu.map((item) => (
