@@ -108,7 +108,7 @@ export const Dashboard = ({ state, setState }: any) => {
               <thead>
                 <tr className="bg-slate-50/50">
                   <th className="px-10 py-6 text-left text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Học sinh</th>
-                  <th className="px-10 py-6 text-center text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">idhs</th>
+                  <th className="px-10 py-6 text-center text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Mã HS</th>
                   <th className="px-10 py-6 text-center text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Hạnh kiểm</th>
                   <th className="px-10 py-6 text-right text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Điểm Tuần {state.currentWeek}</th>
                 </tr>
