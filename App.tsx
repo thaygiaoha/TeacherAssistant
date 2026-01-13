@@ -139,8 +139,8 @@ export default function App() {
     <UserCheck size={14} strokeWidth={2.5} />
   </div>
   <div>
-    <p className="text-[9px] text-slate-500 font-black uppercase tracking-widest leading-none mb-1">GV Chủ Nhiệm</p>
-    <p className="text-xs text-slate-200 font-bold tracking-wide leading-none">{state.gvcnName}</p>
+    <p className="text-[12px] text-slate-800 font-black uppercase tracking-widest leading-none mb-1">GV Chủ Nhiệm</p>
+    <p className="text-xs text-slate-500 font-bold tracking-wide leading-none">{state.gvcnName}</p>
   </div>
 </div>
         </div>
