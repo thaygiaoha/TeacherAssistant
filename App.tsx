@@ -120,15 +120,15 @@ export default function App() {
     }
   };
 
-  const menu = [
-    { id: 'dashboard', label: 'Trung Tâm', icon: LayoutDashboard, color: 'text-blue-400' },
-    { id: 'import', label: 'Nhập Danh sách', icon: Users, color: 'text-cyan-400' },
-    { id: 'attendance', label: 'Điểm danh', icon: UserCheck, color: 'text-emerald-400' },
-    { id: 'actions', label: 'Nhập Lỗi', icon: AlertCircle, color: 'text-rose-500' },
-    { id: 'rewards', label: 'Nhập Thưởng', icon: Gift, color: 'text-amber-400' },
-    { id: 'grading', label: 'Xếp loại', icon: Trophy, color: 'text-indigo-400' },
-    { id: 'settings', label: 'Cài đặt Link', icon: Settings, color: 'text-slate-400' },
-  ];
+ const menu = [
+  { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, color: 'text-blue-400', bg: 'bg-blue-400/10' },
+  { id: 'import', label: 'Nhập Danh sách', icon: Users, color: 'text-cyan-400', bg: 'bg-cyan-400/10' },
+  { id: 'attendance', label: 'Điểm danh', icon: UserCheck, color: 'text-emerald-400', bg: 'bg-emerald-400/10' },
+  { id: 'actions', label: 'Nhập Lỗi', icon: AlertCircle, color: 'text-rose-500', bg: 'bg-rose-500/10' },
+  { id: 'rewards', label: 'Nhập Thưởng', icon: Gift, color: 'text-amber-400', bg: 'bg-amber-400/10' },
+  { id: 'grading', label: 'Xếp loại', icon: Trophy, color: 'text-indigo-400', bg: 'bg-indigo-400/10' },
+  { id: 'settings', label: 'Cài đặt Link', icon: Settings, color: 'text-slate-400', bg: 'bg-slate-400/10' },
+];
 
   return (
     <div className="flex min-h-screen bg-slate-50">
