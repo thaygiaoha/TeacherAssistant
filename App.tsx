@@ -11,6 +11,11 @@ import { ActionCenter } from './components/ActionCenter';
 import { RewardManager } from './components/RewardManager';
 import { GradingManager } from './components/GradingManager';
 import { AppState } from './types';
+import { 
+  LayoutDashboard, Users, UserCheck, AlertCircle, 
+  Gift, Trophy, Settings, RotateCcw, ChevronRight, Save, CloudDownload,
+  GraduationCap // <-- Thêm cái này vào
+} from 'lucide-react';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -116,13 +121,13 @@ export default function App() {
   };
 
   const menu = [
-    { id: 'dashboard', label: 'Trung Tâm', icon: LayoutDashboard },
-    { id: 'import', label: 'Nhập Danh sách', icon: Users },
-    { id: 'attendance', label: 'Điểm danh', icon: UserCheck },
-    { id: 'actions', label: 'Nhập Lỗi', icon: AlertCircle },
-    { id: 'rewards', label: 'Nhập Thưởng', icon: Gift },
-    { id: 'grading', label: 'Xếp loại', icon: Trophy },
-    { id: 'settings', label: 'Cài đặt Link', icon: Settings },
+    { id: 'dashboard', label: 'Trung Tâm', icon: LayoutDashboard, color: 'text-blue-400' },
+    { id: 'import', label: 'Nhập Danh sách', icon: Users, color: 'text-cyan-400' },
+    { id: 'attendance', label: 'Điểm danh', icon: UserCheck, color: 'text-emerald-400' },
+    { id: 'actions', label: 'Nhập Lỗi', icon: AlertCircle, color: 'text-rose-500' },
+    { id: 'rewards', label: 'Nhập Thưởng', icon: Gift, color: 'text-amber-400' },
+    { id: 'grading', label: 'Xếp loại', icon: Trophy, color: 'text-indigo-400' },
+    { id: 'settings', label: 'Cài đặt Link', icon: Settings, color: 'text-slate-400' },
   ];
 
   return (
@@ -131,7 +136,15 @@ export default function App() {
       <aside className="w-80 bg-[#0F172A] text-white flex flex-col fixed inset-y-0 shadow-2xl z-50">
         <div className="p-8">
           <div className="flex items-center gap-3 mb-2">
-            <div className="fas fa-calendar-alt"></div>
+           <div className="flex items-center gap-3 mb-2">
+  <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-indigo-700 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-500/20 transform -rotate-3 hover:rotate-0 transition-transform duration-300">
+    <GraduationCap size={28} className="text-white" strokeWidth={2.5} />
+  </div>
+  <div>
+    <h1 className="font-extrabold text-xl tracking-tight uppercase text-white">Teacher</h1>
+    <p className="text-[10px] text-indigo-400 font-black uppercase tracking-[0.2em]">Assistant</p>
+  </div>
+</div>
             <h1 className="font-extrabold text-xl tracking-tight uppercase">Teacher Assistant</h1>
           </div>
           <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em] ml-1">Quản lý lớp nề nếp</p>
