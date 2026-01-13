@@ -66,6 +66,7 @@ export default function App() {
       setState(prev => ({
         ...prev,   
         gvcnName: data.gvcnName || 'Chưa cập nhật',
+        password: data.cloudPassword,
         violations: data.violations || [],
         rewards: data.rewards || [],
         bch: data.bchList || [],
@@ -74,6 +75,7 @@ export default function App() {
         weeklyScores: data.weeklyScores || [],
         allRanks: data.allRanks || []
       }));     
+      
     } catch (error) {
       alert("❌ Lỗi kết nối Google Sheets!");
     } finally {
