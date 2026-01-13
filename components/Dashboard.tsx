@@ -4,7 +4,7 @@ import {
   ExternalLink, UserCircle2, X, Search, Activity, Calendar
 } from 'lucide-react';
 
-export const Dashboard = ({ state, setActiveTab }: any) => { // Thêm setActiveTab để chuyển trang
+export const Dashboard = ({ state, setState, setActiveTab }: any) => { // Thêm setActiveTab để chuyển trang
   const [currentImg, setCurrentImg] = useState(0);
   const [showStudentList, setShowStudentList] = useState(false);
   const [searchMember, setSearchMember] = useState('');
