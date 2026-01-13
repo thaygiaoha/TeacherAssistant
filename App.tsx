@@ -141,12 +141,10 @@ export default function App() {
     <GraduationCap size={28} className="text-white" strokeWidth={2.5} />
   </div>
   <div>
-    <h1 className="font-extrabold text-xl tracking-tight uppercase text-white">Teacher</h1>
-    <p className="text-[10px] text-indigo-400 font-black uppercase tracking-[0.2em]">Assistant</p>
+    <h1 className="font-extrabold text-xl tracking-tight uppercase text-white">Teacher Assistant</h1>
+   
   </div>
-</div>
-            <h1 className="font-extrabold text-xl tracking-tight uppercase">Teacher Assistant</h1>
-          </div>
+
           <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em] ml-1">Quản lý lớp nề nếp</p>
         </div>
 
