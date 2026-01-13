@@ -201,7 +201,7 @@ export default function App() {
                 <button 
                   onClick={() => {
                     const passInput = document.getElementById('adminPass') as HTMLInputElement;
-                    if(passInput.value === '123') {
+                    if(passInput.value === 'a0988948882A@') {
                       localStorage.setItem('saved_script_url', state.googleScriptUrl);
                       fetchCloudData(state.googleScriptUrl); // Tải lại dữ liệu ngay lập tức với link mới
                     } else {
