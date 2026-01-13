@@ -146,28 +146,38 @@ export default function App() {
     <p className="text-[10px] text-indigo-400 font-black uppercase tracking-[0.2em]">Assistant</p>
   </div>
 </div>
+              </div>
+            </div>
 
           <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em] ml-1">Quản lý lớp nề nếp</p>
         </div>
-        <nav className="flex-1 px-4 space-y-2 mt-4">
-          {menu.map((item) => (
-            <button
-              key={item.id}
-              onClick={() => checkAccess(item.id, item.label)}
-              className={`w-full flex items-center justify-between px-5 py-4 rounded-2xl transition-all ${
-                activeTab === item.id 
-                ? 'bg-indigo-600 text-white shadow-xl scale-[1.02]' 
-                : 'text-slate-400 hover:bg-white/5 hover:text-white'
-              }`}
-            >
-              <div className="flex items-center gap-4">
-                <item.icon size={18} />
-                <span className="text-sm font-bold">{item.label}</span>
-              </div>
-              <ChevronRight size={14} className={activeTab === item.id ? 'opacity-100' : 'opacity-0'} />
-            </button>
-          ))}
-        </nav>
+       <nav className="flex-1 px-4 space-y-2 mt-4">
+  {menu.map((item) => (
+    <button
+      key={item.id}
+      onClick={() => checkAccess(item.id, item.label)}
+      className={`w-full flex items-center justify-between px-5 py-4 rounded-2xl transition-all ${
+        activeTab === item.id 
+        ? 'bg-white/10 text-white shadow-lg border border-white/5' // Khi active: Nền sáng nhẹ lên
+        : 'text-slate-400 hover:bg-white/5 hover:text-white'
+      }`}
+    >
+      <div className="flex items-center gap-4">
+        {/* Phần Icon sẽ có màu riêng biệt ở đây */}
+        <div className={`p-2 rounded-lg ${activeTab === item.id ? 'bg-white/10' : ''}`}>
+          <item.icon size={20} className={item.color} /> 
+        </div>
+        <span className={`text-sm font-bold ${activeTab === item.id ? 'text-white' : 'text-slate-400'}`}>
+          {item.label}
+        </span>
+      </div>
+      
+      {activeTab === item.id && (
+        <div className="w-1.5 h-1.5 rounded-full bg-indigo-400 shadow-[0_0_8px_rgba(129,140,248,0.8)]"></div>
+      )}
+    </button>
+  ))}
+</nav>
 
         <div className="p-6 bg-slate-900/50 mt-auto border-t border-white/5">
           <button 
