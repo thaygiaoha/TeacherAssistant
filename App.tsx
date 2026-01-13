@@ -142,15 +142,11 @@ export default function App() {
               <GraduationCap size={28} className="text-white" strokeWidth={2.5} />
             </div>
             <div>
-              <h1 className="font-extrabold text-xl tracking-tight uppercase text-white leading-none">Teacher</h1>
-              <p className="text-[10px] text-indigo-400 font-black uppercase tracking-[0.2em] mt-1">Assistant</p>
+              <h1 className="font-extrabold text-xl tracking-tight uppercase text-white leading-none">Teacher Assistant</h1>
+              <p className="text-[10px] text-indigo-400 font-black uppercase tracking-[0.2em] mt-1">Nguyễn Văn Hà</p>
             </div>
           </div>
-
-          <div className="h-px w-full bg-gradient-to-r from-transparent via-slate-700 to-transparent mb-4 opacity-50" />
           
-          <p className="text-[10px] text-slate-500 font-bold uppercase tracking-[0.2em] ml-1 mb-2">Hệ thống điều hành</p>
-        </div>
         
        <nav className="flex-1 px-4 space-y-2 mt-4">
   {menu.map((item) => (
