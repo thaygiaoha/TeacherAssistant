@@ -121,50 +121,7 @@ export const Dashboard = ({ state, setActiveTab }: any) => { // Thêm setActiveT
       </div>
     ))}
   </div>
-</div>
-
-              {/* NÚT HỒ SƠ LỚP HỌC - TO & XANH CYAN */}
-              <button 
-                onClick={() => setShowStudentList(true)}
-                className="px-8 py-4 bg-cyan-500 text-white rounded-[24px] font-black text-sm hover:bg-cyan-600 transition-all shadow-xl shadow-cyan-200 flex items-center gap-3 animate-pulse hover:animate-none"
-              >
-                <Users size={24}/> HỒ SƠ LỚP HỌC
-              </button>
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {bch.map((mem: any, idx: number) => (
-              <div key={idx} className="p-6 rounded-[32px] bg-slate-50 border border-slate-100 text-center group hover:bg-indigo-600 transition-all duration-300">
-                <div className="w-10 h-10 bg-white rounded-xl shadow-sm mx-auto mb-3 flex items-center justify-center text-indigo-600 group-hover:scale-110 transition-transform">
-                   <UserCircle2 size={20}/>
-                </div>
-                <div className="text-[9px] font-black text-indigo-500 uppercase mb-1 group-hover:text-indigo-200">{mem.position}</div>
-                <div className="font-black text-slate-800 text-sm group-hover:text-white">{mem.name}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* CỘT KỶ LUẬT - BẤM VÀO ĐỂ XEM CHI TIẾT */}
-        <button 
-          onClick={() => setActiveTab('actions')} // Bấm vào là nhảy sang tab Nhập Lỗi
-          className="bg-rose-500 p-8 rounded-[48px] text-white shadow-xl shadow-rose-200 relative overflow-hidden flex flex-col justify-center text-left transition-transform hover:scale-105 active:scale-95"
-        >
-          <div className="relative z-10">
-            <h3 className="text-lg font-black mb-2 tracking-tight">Kỷ luật tuần</h3>
-            <div className="text-7xl font-black mb-2 tracking-tighter">
-              {state.violationLogs?.length || 0}
-            </div>
-            <p className="text-rose-100 text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
-              Bấm để xem chi tiết <ChevronRight size={14}/>
-            </p>
-          </div>
-          <div className="absolute -right-8 -bottom-8 opacity-20 transform rotate-12 text-white">
-            <Activity size={150} />
-          </div>
-        </button>
-      </div>
+</div>   
 
       {/* MODAL HỒ SƠ LỚP HỌC */}
       {showStudentList && (
