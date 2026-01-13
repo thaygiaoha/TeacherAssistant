@@ -66,23 +66,62 @@ export const Dashboard = ({ state, setActiveTab }: any) => { // Thêm setActiveT
         </div>
       </div>
 
-      {/* 2. BAN CHẤP HÀNH & NÚT ĐIỀU KHIỂN */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-        <div className="lg:col-span-3 bg-white p-8 rounded-[48px] border border-slate-100 shadow-sm">
-          <div className="flex flex-wrap justify-between items-center gap-4 mb-8">
-            <h3 className="text-xl font-black flex items-center gap-3 text-slate-800">
-              <Award size={24} className="text-amber-500"/> Ban chấp hành lớp
-            </h3>
-            
-            <div className="flex gap-3">
-              {/* NÚT TUẦN ĐÁNH GIÁ */}
-              <div className="px-6 py-4 bg-indigo-50 rounded-2xl flex items-center gap-3 border border-indigo-100">
-                <Calendar className="text-indigo-600" size={20} />
-                <div>
-                  <p className="text-[10px] font-black text-indigo-400 uppercase leading-none">Tuần đánh giá</p>
-                  <p className="text-lg font-black text-indigo-900 leading-none mt-1">Tuần {state.currentWeek}</p>
-                </div>
-              </div>
+    {/* 2. KHU VỰC ĐIỀU KHIỂN & BAN CHẤP HÀNH */}
+<div className="bg-white p-8 rounded-[48px] border border-slate-100 shadow-sm w-full">
+  <div className="flex flex-wrap justify-between items-center gap-6 mb-10">
+    <h3 className="text-xl font-black flex items-center gap-3 text-slate-800">
+      <Award size={24} className="text-amber-500"/> Ban chấp hành lớp
+    </h3>
+    
+    <div className="flex items-center gap-4">
+      {/* BỘ TĂNG GIẢM TUẦN - ĐÃ KHÔI PHỤC */}
+      <div className="flex items-center bg-slate-100 p-2 rounded-[28px] border border-slate-200 shadow-inner">
+        <button 
+          onClick={() => setState((prev: any) => ({...prev, currentWeek: Math.max(1, prev.currentWeek - 1)}))}
+          className="w-12 h-12 flex items-center justify-center bg-white rounded-2xl shadow-sm text-slate-600 hover:bg-rose-500 hover:text-white transition-all font-black text-xl"
+        >
+          -
+        </button>
+        
+        <div className="px-8 text-center">
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Tuần hiện tại</p>
+          <p className="text-2xl font-black text-slate-900 leading-none">
+             {state.currentWeek}
+          </p>
+        </div>
+
+        <button 
+          onClick={() => setState((prev: any) => ({...prev, currentWeek: prev.currentWeek + 1}))}
+          className="w-12 h-12 flex items-center justify-center bg-white rounded-2xl shadow-sm text-slate-600 hover:bg-emerald-500 hover:text-white transition-all font-black text-xl"
+        >
+          +
+        </button>
+      </div>
+
+      {/* NÚT HỒ SƠ LỚP HỌC - TO & SÁNG XANH */}
+      <button 
+        onClick={() => setShowStudentList(true)}
+        className="px-10 py-5 bg-cyan-500 text-white rounded-[28px] font-black text-sm hover:bg-cyan-600 transition-all shadow-xl shadow-cyan-100 flex items-center gap-3 group"
+      >
+        <Users size={24} className="group-hover:scale-110 transition-transform" /> 
+        HỒ SƠ LỚP HỌC
+      </button>
+    </div>
+  </div>
+  
+  {/* Grid danh sách BCH - Trải rộng hết cỡ */}
+  <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-5">
+    {bch.map((mem: any, idx: number) => (
+      <div key={idx} className="p-6 rounded-[35px] bg-slate-50 border border-slate-100 text-center group hover:bg-indigo-600 transition-all duration-500 hover:shadow-xl hover:shadow-indigo-100">
+        <div className="w-12 h-12 bg-white rounded-2xl shadow-sm mx-auto mb-4 flex items-center justify-center text-indigo-600 group-hover:rotate-12 transition-all">
+           <UserCircle2 size={24}/>
+        </div>
+        <div className="text-[10px] font-black text-indigo-500 uppercase mb-1 group-hover:text-indigo-200 tracking-tight">{mem.position}</div>
+        <div className="font-black text-slate-800 text-sm group-hover:text-white truncate px-2">{mem.name}</div>
+      </div>
+    ))}
+  </div>
+</div>
 
               {/* NÚT HỒ SƠ LỚP HỌC - TO & XANH CYAN */}
               <button 
