@@ -207,7 +207,7 @@ export default function App() {
                         onKeyDown={(e) => {
                           if (e.key === 'Enter') {
                             const val = (e.currentTarget as HTMLInputElement).value;
-                            if(val === '123') setState(prev => ({...prev, isSettingsUnlocked: true}));
+                            if(val === '0988948882A@') setState(prev => ({...prev, isSettingsUnlocked: true}));
                             else alert('❌ Sai mật khẩu!');
                           }
                         }}
@@ -215,7 +215,7 @@ export default function App() {
                       <button 
                         onClick={() => {
                           const val = (document.getElementById('unlockPass') as HTMLInputElement).value;
-                          if(val === '123') setState(prev => ({...prev, isSettingsUnlocked: true}));
+                          if(val === '0988948882A@') setState(prev => ({...prev, isSettingsUnlocked: true}));
                           else alert('❌ Sai mật khẩu!');
                         }}
                         className="px-6 bg-slate-900 text-white rounded-2xl font-black text-xs hover:bg-indigo-600 transition-all"
