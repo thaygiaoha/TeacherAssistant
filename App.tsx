@@ -137,10 +137,18 @@ export default function App() {
   <div className="w-6 h-6 rounded-lg bg-indigo-500/20 flex items-center justify-center text-indigo-400 group-hover:bg-indigo-500 group-hover:text-white transition-all">
     <UserCheck size={14} strokeWidth={2.5} />
   </div>
-  <div>
-    <p className="text-[12px] text-slate-300 font-black uppercase tracking-widest leading-none mb-1">GV Chủ Nhiệm</p>
-    <p className="text-xs text-slate-500 font-bold tracking-wide leading-none">{state.gvcnName}</p>
+  {/* KHỐI TÊN GVCN - TO, SÁNG, ĐẲNG CẤP */}
+<div className="mt-4 mx-2 px-4 py-3 bg-gradient-to-r from-indigo-500/10 via-indigo-500/5 to-transparent rounded-[20px] border border-indigo-500/20 flex items-center gap-4 group transition-all duration-300 hover:border-indigo-500/40 shadow-sm">
+  <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-indigo-500 to-indigo-700 flex items-center justify-center text-white shadow-lg shadow-indigo-500/30 transform group-hover:scale-110 transition-transform duration-300">
+    <UserCheck size={22} strokeWidth={2.5} />
   </div>
+  <div className="flex flex-col">
+    <p className="text-[10px] text-indigo-400 font-black uppercase tracking-[0.2em] leading-none mb-1.5">Giáo viên chủ nhiệm</p>
+    <p className="text-sm text-white font-extrabold tracking-wide drop-shadow-sm group-hover:text-indigo-300 transition-colors">
+      {state.gvcnName || "NGUYỄN VĂN HÀ"}
+    </p>
+  </div>
+</div>
 </div>
         </div>
 
