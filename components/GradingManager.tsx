@@ -210,4 +210,8 @@ export const GradingManager = ({ state, setState }: any) => {
       </div>
 
       <button onClick={handleSave} disabled={isCalculating} className="w-full py-8 bg-slate-900 text-white rounded-[40px] font-black text-2xl flex items-center justify-center gap-4 hover:bg-indigo-700 transition-all shadow-2xl">
-        <Save size={
+        <Save size={28} /> {isCalculating ? "ĐANG LƯU DỮ LIỆU..." : `XÁC NHẬN LƯU ${mode === 'week' ? 'TUẦN' : (mode === 'year' ? 'CẢ NĂM' : subMode)}`}
+      </button>
+    </div>
+  );
+};
