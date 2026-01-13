@@ -133,23 +133,24 @@ export default function App() {
   return (
     <div className="flex min-h-screen bg-slate-50">
       {/* Sidebar */}
+      {/* Sidebar */}
       <aside className="w-80 bg-[#0F172A] text-white flex flex-col fixed inset-y-0 shadow-2xl z-50">
         <div className="p-8">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center font-black text-xl shadow-lg shadow-indigo-500/20">T
-            <div className="flex items-center gap-3 mb-2">
-  <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-indigo-700 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-500/20 transform -rotate-3 hover:rotate-0 transition-transform duration-300">
-    <GraduationCap size={28} className="text-white" strokeWidth={2.5} />
-  </div>
-  <div>
-    <h1 className="font-extrabold text-xl tracking-tight uppercase text-white">Teacher</h1>
-    <p className="text-[10px] text-indigo-400 font-black uppercase tracking-[0.2em]">Assistant</p>
-  </div>
-</div>
-              </div>
+          {/* LOGO MỚI TINH GỌN */}
+          <div className="flex items-center gap-4 mb-6">
+            <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-indigo-700 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-500/20 transform -rotate-3 hover:rotate-0 transition-transform duration-300">
+              <GraduationCap size={28} className="text-white" strokeWidth={2.5} />
             </div>
+            <div>
+              <h1 className="font-extrabold text-xl tracking-tight uppercase text-white leading-none">Teacher</h1>
+              <p className="text-[10px] text-indigo-400 font-black uppercase tracking-[0.2em] mt-1">Assistant</p>
+            </div>
+          </div>
 
-          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em] ml-1">Quản lý lớp nề nếp</p>
+          <div className="h-px w-full bg-gradient-to-r from-transparent via-slate-700 to-transparent mb-4 opacity-50" />
+          
+          <p className="text-[10px] text-slate-500 font-bold uppercase tracking-[0.2em] ml-1 mb-2">Hệ thống điều hành</p>
+        </div>
         </div>
        <nav className="flex-1 px-4 space-y-2 mt-4">
   {menu.map((item) => (
