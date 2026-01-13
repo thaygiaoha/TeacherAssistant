@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   LayoutDashboard, Users, UserCheck, AlertCircle, 
-  Gift, Trophy, Settings, RotateCcw, ChevronRight
+  Gift, Trophy, Settings, RotateCcw, ChevronRight, Save, CloudDownload
 } from 'lucide-react';
 
 import { Dashboard } from './components/Dashboard';
@@ -18,61 +18,62 @@ export default function App() {
   
   const [state, setState] = useState<AppState>(() => {   
     const saved = localStorage.getItem('gvcn_state_v3');
+    // Lấy link đã lưu riêng lẻ để đảm bảo cập nhật
+    const savedUrl = localStorage.getItem('saved_script_url') || '';
+    
     if (saved) {
       const parsed = JSON.parse(saved);
       return {
         ...parsed,
+        googleScriptUrl: savedUrl || parsed.googleScriptUrl || '',
         currentWeek: Number(parsed.currentWeek) || 1 
       };
     }
     return {
-      students: [],
-      relatives: [],
-      violations: [], // Bảng lỗi sẽ được load từ Sheet
-      rewards: [],
-      bch: [],
-      weeklyScores: [],
-      violationLogs: [],
-      rewardLogs: [],
-      currentWeek: 1,
-      googleScriptUrl: '',
-      appPassword: 'admin'
+      students: [], relatives: [], violations: [], rewards: [],
+      bch: [], weeklyScores: [], violationLogs: [], rewardLogs: [],
+      currentWeek: 1, googleScriptUrl: savedUrl, appPassword: 'admin'
     };
   });
 
-  // 1. Tự động lưu dữ liệu vào máy tính
+  // 1. Tự động lưu dữ liệu vào máy tính (LocalStorage)
   useEffect(() => {
     localStorage.setItem('gvcn_state_v3', JSON.stringify(state));
   }, [state]);
 
-  // 2. TỰ ĐỘNG LOAD BẢNG LỖI KHI MỞ APP (Quan trọng nhất)
+  // 2. Hàm kéo dữ liệu (Em tách riêng để thầy bấm nút cho chắc)
+  const fetchCloudData = async (targetUrl?: string) => {
+    const url = targetUrl || state.googleScriptUrl;
+    if (!url) return;
+    
+    setIsLoading(true);
+    try {
+      const response = await fetch(`${url}?action=get_initial_data`);
+      const data = await response.json();
+      
+      setState(prev => ({
+        ...prev,            
+        violations: data.violations || [],
+        rewards: data.rewards || [],
+        bch: data.bchList || [],
+        violationLogs: data.violationLogs || [], 
+        rewardLogs: data.rewardLogs || [],
+        weeklyScores: data.weeklyScores || [],
+        allRanks: data.allRanks || []
+      }));
+      alert("✅ Đã đồng bộ dữ liệu mới nhất từ Google Sheets!");
+    } catch (error) {
+      console.error("Lỗi fetch:", error);
+      alert("❌ Lỗi: Không thể tải dữ liệu. Kiểm tra lại Link hoặc quyền truy cập Script!");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Tự động load khi mở App nếu đã có Link
   useEffect(() => {
-    const fetchInitialData = async () => {
-      if (!state.googleScriptUrl) return;
-      setIsLoading(true);
-      try {
-        const response = await fetch(`${state.googleScriptUrl}?action=get_initial_data`);
-        const data = await response.json();
-        if (data.violations) {
-          setState(prev => ({
-            ...prev,            
-            violations: data.violations || [], // Cập nhật bảng lỗi vào state
-            rewards: data.rewards || [],     // <--- Lưu danh sách thưởng
-            bch: data.bchList || [],            // <--- Lưu danh sách BCH
-            violationLogs: data.violationLogs || [], 
-            rewardLogs: data.rewardLogs || [],
-            weeklyScores: data.weeklyScores || [],
-            allRanks: data.allRanks || []
-          }));
-        }
-      } catch (error) {
-        console.error("Không thể tải bảng lỗi:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchInitialData();
-  }, [state.googleScriptUrl]); // Chạy khi Link Script thay đổi hoặc mở App
+    if (state.googleScriptUrl) fetchCloudData();
+  }, []);
 
   const validatePass = (action: string) => {
     const input = prompt(`[BẢO MẬT] Nhập mật khẩu để truy cập "${action}":`);
@@ -97,9 +98,8 @@ export default function App() {
         setState(prev => ({
           ...prev,
           currentWeek: prev.currentWeek + 1,
-          // Giữ lại bảng lỗi (violations), chỉ xóa log ghi chép
-          violationLogs: prev.violationLogs.map(l => ({ ...l, v_logs: {} })),
-          rewardLogs: prev.rewardLogs.map(l => ({ ...l, t_logs: {} }))
+          violationLogs: [], 
+          rewardLogs: []
         }));
         alert("✅ Đã sang tuần mới!");
       }
@@ -118,11 +118,11 @@ export default function App() {
 
   return (
     <div className="flex min-h-screen bg-slate-50">
-      {/* Sidebar (Giữ nguyên giao diện đẹp của thầy) */}
+      {/* Sidebar */}
       <aside className="w-80 bg-[#0F172A] text-white flex flex-col fixed inset-y-0 shadow-2xl z-50">
         <div className="p-8">
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center font-black text-xl shadow-lg shadow-indigo-500/20">T</div>
+            <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center font-black text-xl shadow-lg">T</div>
             <h1 className="font-extrabold text-xl tracking-tight uppercase">Teacher Assistant</h1>
           </div>
           <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em] ml-1">Quản lý lớp nề nếp</p>
@@ -149,42 +149,40 @@ export default function App() {
         </nav>
 
         <div className="p-6 bg-slate-900/50 mt-auto border-t border-white/5">
-          <div className="bg-slate-800 rounded-2xl p-4 mb-4 border border-white/5">
-            <div className="flex justify-between items-center mb-2">
-              <span className="text-[10px] font-black text-slate-500 uppercase">Tiến độ Học kỳ</span>
-              <span className="text-indigo-400 font-black text-sm">Tuần {state.currentWeek}</span>
-            </div>
-            <div className="h-1.5 w-full bg-slate-700 rounded-full overflow-hidden">
-              <div className="h-full bg-indigo-500 rounded-full transition-all" style={{width: `${(state.currentWeek/18)*100}%`}}></div>
-            </div>
-          </div>
           <button 
-            onClick={handleReset}
-            className="w-full flex items-center justify-center gap-3 py-4 rounded-2xl bg-rose-500/10 text-rose-500 border border-rose-500/20 font-black text-xs hover:bg-rose-500 hover:text-white transition-all shadow-lg"
+            onClick={() => fetchCloudData()}
+            disabled={isLoading}
+            className="w-full mb-4 flex items-center justify-center gap-3 py-3 rounded-xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 font-bold text-xs hover:bg-indigo-500 hover:text-white transition-all"
           >
-            <RotateCcw size={16} /> RESET TUẦN MỚI
+            <CloudDownload size={16} /> {isLoading ? "ĐANG TẢI..." : "ĐỒNG BỘ CLOUD"}
+          </button>
+          
+          <button onClick={handleReset} className="w-full flex items-center justify-center gap-3 py-3 rounded-xl bg-rose-500/10 text-rose-500 border border-rose-500/20 font-bold text-xs hover:bg-rose-500 hover:text-white transition-all">
+            <RotateCcw size={16} /> RESET TUẦN
           </button>
         </div>
       </aside>
 
       {/* Main Content */}
-
-     {activeTab === 'settings' && (
+      <main className="flex-1 ml-80 p-10 min-h-screen">
+        <div className="max-w-7xl mx-auto">
+          {activeTab === 'dashboard' && <Dashboard state={state} setState={setState} />}
+          {activeTab === 'import' && <ImportManager state={state} setState={setState} />}
+          {activeTab === 'attendance' && <AttendanceManager state={state} setState={setState} />}
+          {activeTab === 'actions' && <ActionCenter state={state} setState={setState} />}
+          {activeTab === 'rewards' && <RewardManager state={state} setState={setState} />}
+          {activeTab === 'grading' && <GradingManager state={state} setState={setState} />}
+          
+          {activeTab === 'settings' && (
             <div className="bg-white p-12 rounded-[48px] shadow-sm border border-slate-100 animate-in fade-in slide-in-from-bottom-4">
-              <h2 className="text-3xl font-black mb-8 flex items-center gap-4">
-                <div className="p-3 bg-slate-100 rounded-2xl text-slate-500"><Settings size={28}/></div>
-                Cấu hình hệ thống
+              <h2 className="text-3xl font-black mb-8 flex items-center gap-4 text-slate-800">
+                <Settings size={32} className="text-slate-400"/> Cấu hình hệ thống
               </h2>
               
               <div className="space-y-8 max-w-2xl">
                 <div>
                   <label className="block text-[10px] font-black text-slate-400 uppercase mb-3 ml-2 tracking-widest">Mật khẩu xác thực (Admin)</label>
-                  <input 
-                    type="password" 
-                    placeholder="Nhập mật khẩu để chỉnh sửa..."
-                    id="adminPass"
-                    className="w-full p-5 bg-slate-50 border-2 border-slate-100 rounded-[24px] outline-none focus:border-indigo-500 font-mono text-sm transition-all shadow-inner"
-                  />
+                  <input type="password" placeholder="Nhập mật khẩu..." id="adminPass" className="w-full p-5 bg-slate-50 border-2 border-slate-100 rounded-[24px] outline-none focus:border-indigo-500 font-mono text-sm transition-all" />
                 </div>
 
                 <hr className="border-slate-100" />
@@ -196,40 +194,29 @@ export default function App() {
                     value={state.googleScriptUrl}
                     onChange={(e) => setState(prev => ({...prev, googleScriptUrl: e.target.value}))}
                     placeholder="https://script.google.com/macros/s/.../exec"
-                    className="w-full p-5 bg-slate-50 border-2 border-slate-100 rounded-[24px] outline-none focus:border-indigo-500 font-mono text-sm transition-all shadow-inner"
+                    className="w-full p-5 bg-slate-50 border-2 border-slate-100 rounded-[24px] outline-none focus:border-indigo-500 font-mono text-sm transition-all"
                   />
-                </div>
-
-                <div className="p-6 bg-amber-50 rounded-[24px] border border-amber-100">
-                  <p className="text-amber-700 text-xs font-bold flex items-center gap-2">
-                    <AlertCircle size={14}/> Quan trọng: Mọi thay đổi về Link sẽ ảnh hưởng trực tiếp đến việc đồng bộ dữ liệu.
-                  </p>
                 </div>
 
                 <button 
                   onClick={() => {
                     const passInput = document.getElementById('adminPass') as HTMLInputElement;
-                    if(passInput.value === '123') { // Thay mật khẩu của thầy tại đây
+                    if(passInput.value === '123') {
                       localStorage.setItem('saved_script_url', state.googleScriptUrl);
-                      alert('✅ Đã lưu cấu hình hệ thống thành công!');
+                      fetchCloudData(state.googleScriptUrl); // Tải lại dữ liệu ngay lập tức với link mới
                     } else {
-                      alert('❌ Mật khẩu admin không đúng!');
+                      alert('❌ Sai mật khẩu!');
                     }
                   }}
-                  className="w-full py-5 bg-slate-900 text-white rounded-[24px] font-black text-lg flex items-center justify-center gap-3 hover:bg-indigo-600 transition-all shadow-xl active:scale-95"
+                  className="w-full py-6 bg-slate-900 text-white rounded-[24px] font-black text-lg flex items-center justify-center gap-3 hover:bg-indigo-600 transition-all shadow-xl shadow-indigo-200"
                 >
-                  <Save size={20} /> LƯU CẤU HÌNH
+                  <Save size={20} /> LƯU & ĐỒNG BỘ NGAY
                 </button>
               </div>
             </div>
           )}
-
         </div>
-
       </main>
-
     </div>
-
   );
-
 }
