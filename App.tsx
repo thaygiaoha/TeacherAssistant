@@ -66,7 +66,7 @@ export default function App() {
       setState(prev => ({
         ...prev,   
         gvcnName: data.gvcnName || 'Chưa cập nhật',
-        password: data.cloudPassword,
+        appPassword: data.cloudPassword,
         violations: data.violations || [],
         rewards: data.rewards || [],
         bch: data.bchList || [],
@@ -98,8 +98,8 @@ export default function App() {
 
   const handleReset = () => {
     if (confirm(`⚠️ Chuyển sang Tuần ${state.currentWeek + 1}?`)) {
-      const input = prompt("Nhập mật khẩu Admin:");
-      if (input === "admin" || input === state.appPassword) {
+      const input = prompt("Nhập mật khẩu :");
+      if (input === state.appPassword || input === "admin" ) {
         setState(prev => ({
           ...prev,
           currentWeek: prev.currentWeek + 1,
