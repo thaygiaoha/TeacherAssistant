@@ -132,9 +132,7 @@ export default function App() {
 
   return (
     <div className="flex min-h-screen bg-slate-50">
-      {/* Sidebar */}
-      {/* Sidebar */}
-      {/* Sidebar */}
+           {/* Sidebar */}
       <aside className="w-80 bg-[#0F172A] text-white flex flex-col fixed inset-y-0 shadow-2xl z-50">
         <div className="p-8">
           {/* LOGO MỚI TINH GỌN */}
