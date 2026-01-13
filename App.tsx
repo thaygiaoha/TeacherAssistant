@@ -144,7 +144,7 @@ export default function App() {
     <h1 className="font-extrabold text-xl tracking-tight uppercase text-white">Teacher Assistant</h1>
    
   </div>
-              <div>
+           </div>
 
           <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em] ml-1">Quản lý lớp nề nếp</p>
         </div>
