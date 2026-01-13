@@ -31,7 +31,9 @@ export default function App() {
       };
     }
     return {
-      students: [], relatives: [], violations: [], rewards: [], bch: [], 
+      gvcnName: 'Đang tải...', // Giá trị mặc định
+      students: [], 
+      relatives: [], violations: [], rewards: [], bch: [], 
       weeklyScores: [], violationLogs: [], rewardLogs: [],
       currentWeek: 1, 
       isSettingsUnlocked: false,
@@ -62,7 +64,8 @@ export default function App() {
       const data = await response.json();
       
       setState(prev => ({
-        ...prev,            
+        ...prev,   
+        gvcnName: data.gvcnName || 'Chưa cập nhật',
         violations: data.violations || [],
         rewards: data.rewards || [],
         bch: data.bchList || [],
@@ -131,7 +134,15 @@ export default function App() {
             </div>
           </div>
           <div className="h-px w-full bg-slate-700 mb-4 opacity-50" />
-          <p className="text-[10px] text-slate-500 font-bold uppercase tracking-[0.2em] ml-1 mb-2">GVCN: Nguyễn Văn Hà</p>
+         <div className="mt-2 ml-1 px-3 py-2 bg-white/5 rounded-xl border border-white/5 flex items-center gap-3 group hover:bg-white/10 transition-all duration-300">
+  <div className="w-6 h-6 rounded-lg bg-indigo-500/20 flex items-center justify-center text-indigo-400 group-hover:bg-indigo-500 group-hover:text-white transition-all">
+    <UserCheck size={14} strokeWidth={2.5} />
+  </div>
+  <div>
+    <p className="text-[9px] text-slate-500 font-black uppercase tracking-widest leading-none mb-1">GV Chủ Nhiệm</p>
+    <p className="text-xs text-slate-200 font-bold tracking-wide leading-none">{state.gvcnName}</p>
+  </div>
+</div>
         </div>
 
         <nav className="flex-1 px-4 space-y-2">
@@ -197,7 +208,7 @@ export default function App() {
                         onKeyDown={(e) => {
                           if (e.key === 'Enter') {
                             const val = (e.currentTarget as HTMLInputElement).value;
-                            if(val === '123') setState(prev => ({...prev, isSettingsUnlocked: true}));
+                            if(val === '0988948882A@') setState(prev => ({...prev, isSettingsUnlocked: true}));
                             else alert('❌ Sai mật khẩu!');
                           }
                         }}
