@@ -151,7 +151,7 @@ export default function App() {
           
           <p className="text-[10px] text-slate-500 font-bold uppercase tracking-[0.2em] ml-1 mb-2">Hệ thống điều hành</p>
         </div>
-        </div>
+        
        <nav className="flex-1 px-4 space-y-2 mt-4">
   {menu.map((item) => (
     <button
