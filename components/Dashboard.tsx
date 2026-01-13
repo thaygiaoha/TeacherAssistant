@@ -74,29 +74,35 @@ export const Dashboard = ({ state, setState, setActiveTab }: any) => { // Thêm 
     </h3>
     
     <div className="flex items-center gap-4">
-      {/* BỘ TĂNG GIẢM TUẦN - ĐÃ KHÔI PHỤC */}
-      <div className="flex items-center bg-slate-100 p-2 rounded-[28px] border border-slate-200 shadow-inner">
-        <button 
-          onClick={() => setState((prev: any) => ({...prev, currentWeek: Math.max(1, prev.currentWeek - 1)}))}
-          className="w-12 h-12 flex items-center justify-center bg-white rounded-2xl shadow-sm text-slate-600 hover:bg-rose-500 hover:text-white transition-all font-black text-xl"
-        >
-          -
-        </button>
-        
-        <div className="px-8 text-center">
-          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Tuần hiện tại</p>
-          <p className="text-2xl font-black text-slate-900 leading-none">
-             {state.currentWeek}
-          </p>
-        </div>
+     {/* BỘ TĂNG GIẢM TUẦN */}
+<div className="flex items-center bg-slate-100 p-2 rounded-[28px] border border-slate-200 shadow-inner">
+  <button 
+    onClick={() => {
+      if (state.currentWeek > 1) {
+        setState({ ...state, currentWeek: state.currentWeek - 1 });
+      }
+    }}
+    className="w-12 h-12 flex items-center justify-center bg-white rounded-2xl shadow-sm text-slate-600 hover:bg-rose-500 hover:text-white transition-all font-black text-xl active:scale-90"
+  >
+    -
+  </button>
+  
+  <div className="px-8 text-center min-w-[120px]">
+    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Tuần hiện tại</p>
+    <p className="text-2xl font-black text-slate-900 leading-none">
+       {state.currentWeek}
+    </p>
+  </div>
 
-        <button 
-          onClick={() => setState((prev: any) => ({...prev, currentWeek: prev.currentWeek + 1}))}
-          className="w-12 h-12 flex items-center justify-center bg-white rounded-2xl shadow-sm text-slate-600 hover:bg-emerald-500 hover:text-white transition-all font-black text-xl"
-        >
-          +
-        </button>
-      </div>
+  <button 
+    onClick={() => {
+      setState({ ...state, currentWeek: state.currentWeek + 1 });
+    }}
+    className="w-12 h-12 flex items-center justify-center bg-white rounded-2xl shadow-sm text-slate-600 hover:bg-emerald-500 hover:text-white transition-all font-black text-xl active:scale-90"
+  >
+    +
+  </button>
+</div>
 
       {/* NÚT HỒ SƠ LỚP HỌC - TO & SÁNG XANH */}
       <button 
