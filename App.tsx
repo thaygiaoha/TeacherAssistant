@@ -143,7 +143,7 @@ export default function App() {
         <UserCheck size={22} strokeWidth={2.5} />
       </div>
       <div className="flex flex-col min-w-0">
-        <p className="text-[9px] text-indigo-400 font-black uppercase tracking-[0.2em] leading-none mb-1.5">Giáo viên chủ nhiệm</p>
+        <p className="text-[9px] text-indigo-400 font-black uppercase tracking-[0.2em] leading-none mb-2">GV chủ nhiệm</p>
         <p className="text-sm text-white font-extrabold tracking-wide truncate group-hover:text-indigo-300 transition-colors">
           {state.gvcnName || "NGUYỄN VĂN HÀ"}
         </p>
