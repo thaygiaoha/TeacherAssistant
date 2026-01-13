@@ -131,7 +131,7 @@ export default function App() {
       <aside className="w-80 bg-[#0F172A] text-white flex flex-col fixed inset-y-0 shadow-2xl z-50">
         <div className="p-8">
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center font-black text-xl shadow-lg">T</div>
+            <div className="fas fa-calendar-alt"></div>
             <h1 className="font-extrabold text-xl tracking-tight uppercase">Teacher Assistant</h1>
           </div>
           <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em] ml-1">Quản lý lớp nề nếp</p>
