@@ -152,7 +152,7 @@ export default function App() {
   </div>
   
   {/* Phần menu nav sẽ tiếp tục ở dưới này... */}
-</aside>
+
 
         <nav className="flex-1 px-4 space-y-2">
           {menu.map((item) => (
