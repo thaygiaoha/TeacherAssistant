@@ -14,51 +14,81 @@ export const GradingManager = ({ state, setState }: any) => {
 
   // 3. LOGIC TÍNH ĐIỂM & XẾP LOẠI
   const finalGrades = useMemo(() => {
-    // A. Tính điểm thực tế dựa trên logs
+    // 1. Tạo bản đồ tra cứu điểm từ 3 nguồn: Lỗi, Thưởng, Ban cán sự
+    const scoreMap: Record<string, number> = {};
+    state.violations.forEach((v: any) => scoreMap[String(v.codeRule).toUpperCase()] = -Math.abs(v.points || 0));
+    state.rewards.forEach((r: any) => scoreMap[String(r.codeRule).toUpperCase()] = Math.abs(r.points || 0));
+    state.bch.forEach((b: any) => scoreMap[String(b.codeRule).toUpperCase()] = Math.abs(b.points || 0));
+
+    // 2. Tính điểm thực tế
     let list = state.students.map((student: any) => {
-      let totalScore = 100; // Điểm gốc là 100
+      let totalScore = 100;
 
-      // 1. Tạo bản đồ tra cứu điểm từ bảng lỗi (state.violations)
-      const scoreMap: any = {};
-      state.violations.forEach((v: any) => {
-        scoreMap[v.codeRule?.toUpperCase()] = -Math.abs(v.points || 0);
-      });
+      // A. Tính điểm từ sheet 'vipham' (violationLogs)
+      // Tìm dòng của học sinh này trong log
+      const vLogRow = state.violationLogs?.find((row: any) => 
+        String(row.idhs || row[1]) === String(student.idhs)
+      );
       
-      // 2. Tạo bản đồ tra cứu điểm từ bảng thưởng & bch
-      state.rewards.forEach((r: any) => {
-        scoreMap[r.codeRule?.toUpperCase()] = Math.abs(r.points || 0);
-      });
-      state.bch.forEach((b: any) => {
-        scoreMap[b.codeRule?.toUpperCase()] = Math.abs(b.points || 0);
-      });
-
-      // 3. Quét danh sách lỗi đã ghi (violationLogs)
-      // Giả sử dữ liệu lỗi của thầy có dạng: { studentId: 'HS01', codes: ['L01', 'L02'] }
-      const myViolations = state.violationLogs?.filter((log: any) => log.studentId === student.idhs);
-      if (myViolations) {
-        myViolations.forEach((log: any) => {
-          if (Array.isArray(log.codes)) {
-            log.codes.forEach((c: string) => {
-              totalScore += (scoreMap[c.toUpperCase()] || 0);
-            });
-          }
+      if (vLogRow) {
+        // Duyệt qua tất cả các thuộc tính của row (vì dữ liệu từ sheet ghi ngang)
+        Object.values(vLogRow).forEach(cellValue => {
+          const code = String(cellValue).trim().toUpperCase();
+          if (scoreMap[code]) totalScore += scoreMap[code];
         });
       }
 
-      // 4. Quét danh sách thưởng đã ghi (rewardLogs)
-      const myRewards = state.rewardLogs?.filter((log: any) => log.studentId === student.idhs);
-      if (myRewards) {
-        myRewards.forEach((log: any) => {
-          if (Array.isArray(log.codes)) {
-            log.codes.forEach((c: string) => {
-              totalScore += (scoreMap[c.toUpperCase()] || 0);
-            });
-          }
+      // B. Tính điểm từ sheet 'thuong' (rewardLogs)
+      const rLogRow = state.rewardLogs?.find((row: any) => 
+        String(row.idhs || row[1]) === String(student.idhs)
+      );
+
+      if (rLogRow) {
+        Object.values(rLogRow).forEach(cellValue => {
+          const code = String(cellValue).trim().toUpperCase();
+          if (scoreMap[code]) totalScore += scoreMap[code];
         });
       }
 
       return { ...student, totalScore };
     });
+
+    // --- TIẾP TỤC LOGIC XẾP HẠNG VÀ CHỈ TIÊU (Giữ nguyên phần dưới) ---
+    if (mode === 'year') {
+       // Logic Cả năm theo T-T=T thầy đã có
+       return list.map(s => ({ ...s, finalRank: 'Tốt' })); // Tạm để demo
+    }
+
+    list.sort((a, b) => b.totalScore - a.totalScore);
+    
+    const assignRanks = (students: any[]) => {
+      let currentIdx = 0;
+      const result = students.map(s => ({ ...s, autoRank: 'Không XL' }));
+      const applyRank = (rankName: string, count: number) => {
+        let num = Number(count);
+        if (num <= 0 || currentIdx >= result.length) return;
+        let lastInRankIdx = Math.min(currentIdx + num - 1, result.length - 1);
+        const thresholdScore = result[lastInRankIdx].totalScore;
+        for (let i = currentIdx; i < result.length; i++) {
+          if (i <= lastInRankIdx || result[i].totalScore === thresholdScore) {
+            result[i].autoRank = rankName;
+            currentIdx = i + 1;
+          } else break;
+        }
+      };
+      applyRank('Tốt', quota.tot);
+      applyRank('Khá', quota.kha);
+      applyRank('Đạt', quota.dat);
+      applyRank('Chưa Đạt', quota.chuadat);
+      return result;
+    };
+
+    const rankedList = assignRanks(list);
+    return rankedList.map(s => {
+      const ex = exceptions.find(e => e.idhs === s.idhs);
+      return { ...s, finalRank: ex ? ex.rank : s.autoRank, isManual: !!ex };
+    });
+  }, [state, mode, quota, exceptions]);
 
     // C. Sắp xếp theo điểm giảm dần
     list.sort((a: any, b: any) => b.totalScore - a.totalScore);
