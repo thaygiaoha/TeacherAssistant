@@ -1,0 +1,7 @@
+{
+  "name": "Teacher Assistant Pro - Quản Lý Lớp Chủ Nhiệm",
+  "description": "Ứng dụng quản lý lớp học toàn diện cho giáo viên chủ nhiệm, hỗ trợ nhập liệu Excel, theo dõi vi phạm, điểm thưởng, tổng hợp điểm tuần và xếp loại học kỳ.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
