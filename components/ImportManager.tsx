@@ -31,11 +31,17 @@ export const ImportManager = ({ state, setState }: any) => {
         // Đọc sheet nguoithan
         const ntSheet = wb.Sheets['nguoithan'];
         const relatives = ntSheet ? XLSX.utils.sheet_to_json(ntSheet).map((r: any) => ({
-          idhs: String(r.idhs || ''),
-          phonefather: r.phonefather || '', datefather: r.datefather || '', jobfather: r.jobfather || '',
-          fonemother: r.fonemother || '', datemother: r.datemother || '', jobmother: r.jobmother || '',
-          hoancanh: r.hoancanh || ''
-        })) : [];
+  idhs: String(r.idhs || ''),
+  namefather: r.namefather || '', // THÊM DÒNG NÀY
+  phonefather: r.phonefather || '',
+  datefather: r.datefather || '',
+  jobfather: r.jobfather || '',
+  namemother: r.namemother || '', // THÊM DÒNG NÀY
+  phonemother: r.fonemother || '',
+  datemother: r.datemother || '',
+  jobmother: r.jobmother || '',
+  hoancanh: r.hoancanh || ''
+})) : [];
 
         // Cập nhật Local State
         setState((prev: any) => ({ ...prev, students, relatives }));
