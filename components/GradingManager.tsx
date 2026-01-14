@@ -111,22 +111,33 @@ export const GradingManager = ({ state, setState }: any) => {
     });
   }, [state, mode, subMode, range, quota, exceptions]);
 
-  const handleSave = async () => {
-    const label = mode === 'week' ? `w${state.currentWeek}` : (mode === 'year' ? 'CN' : subMode);
-    if (!window.confirm(`Xác nhận lưu kết quả [${label}]?`)) return;
+ const handleSave = async () => {
+    if (!state.googleScriptUrl) return alert("❌ Chưa có link Script!");
+    
     setIsCalculating(true);
     try {
+      // Chuẩn bị dữ liệu gửi đi
+      const scores = sortedStudents.map(s => ({ idhs: s.idhs, totalScore: s.totalScore }));
+      const ranks = sortedStudents.map(s => ({ idhs: s.idhs, finalRank: s.finalRank }));
+
       await fetch(state.googleScriptUrl, {
-        method: 'POST', mode: 'no-cors',
+        method: 'POST',
+        mode: 'no-cors',
         body: JSON.stringify({
-          action: 'save_final_grading',
-          week: label,
-          results: finalGrades.map(s => ({ idhs: s.idhs, score: s.totalScore, rank: s.finalRank }))
+          action: 'save_grading_bulk',
+          week: state.currentWeek, // Lấy tuần hiện tại từ App
+          scores: scores,
+          ranks: ranks
         })
       });
-      alert("✅ Đã gửi dữ liệu thành công!");
-    } catch (err) { alert("❌ Lỗi kết nối!"); }
-    finally { setIsCalculating(false); }
+
+      alert(`🎉 Đã lưu kết quả Tuần ${state.currentWeek} thành công!`);
+    } catch (err) {
+      console.error(err);
+      alert("❌ Lỗi khi lưu dữ liệu!");
+    } finally {
+      setIsCalculating(false);
+    }
   };
 
   return (
