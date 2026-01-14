@@ -13,46 +13,51 @@ export const GradingManager = ({ state, setState }: any) => {
   const [selectedExRank, setSelectedExRank] = useState('Chưa Đạt');
 
   const finalGrades = useMemo(() => {
-    // 1. Bản đồ điểm tra cứu từ các bảng danh mục
+    // 1. Xây dựng bản đồ điểm (Ép kiểu String + Trim để không sót V01, V02)
     const scoreMap: Record<string, number> = {};
-   const scoreMap: Record<string, number> = {};
     const buildScoreMap = (data: any[]) => {
       data?.forEach(item => {
-        // Tối ưu: Xóa khoảng trắng và chuyển về chữ HOA để so khớp chính xác
-        const code = String(item.codeRule || "").trim().toUpperCase();
+        const code = String(item.codeRule || item.codeBonus || item.codeTitle || "").trim().toUpperCase();
         const pts = Math.abs(Number(item.points) || 0);
         if (code) scoreMap[code] = pts;
       });
     };
-    buildScoreMap(state.violations); // Bảng lỗi
-    buildScoreMap(state.rewards);    // Bảng thưởng (nếu có mã)
-    buildScoreMap(state.bch);        // Bảng BCH
+    buildScoreMap(state.violations);
+    buildScoreMap(state.rewards);
+    buildScoreMap(state.bch);
 
-    // 2. Quy tắc Cả năm T-T=T, T-K=K...
-    const yearRule: Record<string, string> = {
-      'Tốt-Tốt': 'Tốt', 'Tốt-Khá': 'Khá', 'Khá-Tốt': 'Khá', 'Khá-Khá': 'Khá',
-      'Tốt-Đạt': 'Đạt', 'Khá-Đạt': 'Đạt', 'Đạt-Khá': 'Đạt', 'Đạt-Đạt': 'Đạt',
-      'Tốt-Chưa Đạt': 'Chưa Đạt', 'Chưa Đạt-Tốt': 'Chưa Đạt'
-    };
-
-    // 3. Hàm quét điểm từ Logs theo IDHS (Xử lý mảng hoặc object)
+    // 2. Hàm tính điểm chuẩn xác
     const getScoreFromLogs = (logs: any[], studentId: string) => {
       let score = 0;
       if (!logs || !Array.isArray(logs)) return 0;
       const sId = String(studentId).trim();
 
       logs.forEach((row: any) => {
-        const cells = Array.isArray(row) ? row : Object.values(row);
-        // Kiểm tra xem hàng này có chứa IDHS không
-        const isMyRow = cells.some(c => String(c).trim() === sId);
+        // Chuyển row thành mảng các giá trị chuỗi đã trim
+        const cells = (Array.isArray(row) ? row : Object.values(row)).map(c => String(c).trim());
+        
+        // Kiểm tra xem hàng này có phải của học sinh này không (so khớp IDHS ở cột B - index 1)
+        // Hoặc kiểm tra xem IDHS có xuất hiện trong hàng không
+        const isMyRow = cells.includes(sId);
+
         if (isMyRow) {
-          cells.forEach(c => {
-            const code = String(c).trim().toUpperCase();
-            if (scoreMap[code]) score += scoreMap[code];
+          cells.forEach(cellValue => {
+            const code = cellValue.toUpperCase();
+            // CHỈ cộng nếu cellValue là mã lỗi (V01, V02...) và KHÔNG PHẢI là IDHS của học sinh
+            if (code !== sId && scoreMap[code]) {
+              score += scoreMap[code];
+            }
           });
         }
       });
       return score;
+    };
+
+    // 3. Quy tắc Cả năm
+    const yearRule: Record<string, string> = {
+      'Tốt-Tốt': 'Tốt', 'Tốt-Khá': 'Khá', 'Khá-Tốt': 'Khá', 'Khá-Khá': 'Khá',
+      'Tốt-Đạt': 'Đạt', 'Khá-Đạt': 'Đạt', 'Đạt-Khá': 'Đạt', 'Đạt-Đạt': 'Đạt',
+      'Tốt-Chưa Đạt': 'Chưa Đạt', 'Chưa Đạt-Tốt': 'Chưa Đạt'
     };
 
     // 4. Tính toán danh sách
@@ -66,6 +71,7 @@ export const GradingManager = ({ state, setState }: any) => {
         const plus = getScoreFromLogs(state.rewardLogs, sId);
         totalScore = 100 - minus + plus;
       } else if (mode === 'semester') {
+        // ... (Giữ nguyên phần semester và year của thầy)
         const sRow = state.weeklyScores?.find((r: any) => String(r.idhs || r[1]).trim() === sId);
         if (sRow) {
           for (let w = range.from; w <= range.to; w++) {
@@ -82,7 +88,7 @@ export const GradingManager = ({ state, setState }: any) => {
       return { ...student, totalScore, autoRank };
     });
 
-    // 5. Phân hạng (Chỉ cho Tuần/HK)
+    // 5. Phân hạng (Giữ nguyên logic quota của thầy)
     if (mode !== 'year') {
       list.sort((a, b) => b.totalScore - a.totalScore);
       let currentIdx = 0;
