@@ -37,7 +37,7 @@ export const ImportManager = ({ state, setState }: any) => {
   datefather: r.datefather || '',
   jobfather: r.jobfather || '',
   namemother: r.namemother || '', // THÊM DÒNG NÀY
-  phonemother: r.fonemother || '',
+  phonemother: r.phonemother || '',
   datemother: r.datemother || '',
   jobmother: r.jobmother || '',
   hoancanh: r.hoancanh || ''
