@@ -20,7 +20,7 @@ export interface RelativeInfo {
   datefather: string;
   jobfather: string;
   namemother: string;
-  fonemother: string;
+  phonemother: string;
   datemother: string;
   jobmother: string;
   hoancanh: string;
