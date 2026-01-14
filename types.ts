@@ -15,9 +15,11 @@ export interface Student {
 // người thân
 export interface RelativeInfo {
   idhs: string;
+  namefather: string;
   phonefather: string;
   datefather: string;
   jobfather: string;
+  namemother: string;
   fonemother: string;
   datemother: string;
   jobmother: string;
