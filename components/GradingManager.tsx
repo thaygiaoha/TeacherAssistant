@@ -119,24 +119,24 @@ export const GradingManager = ({ state, setState }: any) => {
     });
   }, [state, mode, subMode, range, quota, exceptions]);
 
- const handleSave = async () => {
-    if (!state.googleScriptUrl) return alert("❌ Thầy dán link Script vào cài đặt nhé!");
+const handleSave = async () => {
+    if (!state.googleScriptUrl) return alert("❌ Chưa có link Script!");
     setIsCalculating(true);
     
     try {
-      // Chuẩn bị dữ liệu đúng cấu trúc Script cần
-      const scores = sortedStudents.map((s: any) => ({ 
+      // SỬA TẠI ĐÂY: Dùng finalGrades thay vì sortedStudents nếu sortedStudents chưa định nghĩa
+      const scores = finalGrades.map((s: any) => ({ 
         idhs: s.idhs, 
-        totalScore: s.totalScore  // Tên phải giống trong Script
+        totalScore: s.totalScore 
       }));
-      const ranks = sortedStudents.map((s: any) => ({ 
+      const ranks = finalGrades.map((s: any) => ({ 
         idhs: s.idhs, 
-        finalRank: s.finalRank    // Tên phải giống trong Script
+        finalRank: s.finalRank 
       }));
 
       await fetch(state.googleScriptUrl, {
         method: 'POST',
-        mode: 'no-cors', 
+        mode: 'no-cors',
         body: JSON.stringify({
           action: 'save_grading_bulk',
           week: state.currentWeek,
@@ -145,10 +145,9 @@ export const GradingManager = ({ state, setState }: any) => {
         })
       });
 
-      alert(`🎉 Tuyệt vời! Đã chốt xong dữ liệu Tuần ${state.currentWeek} lên Google Sheet.`);
+      alert(`🎉 Đã chốt xong Tuần ${state.currentWeek} lên Google Sheet!`);
     } catch (err) {
-      console.error(err);
-      alert("❌ Lỗi kết nối! Thầy kiểm tra lại mạng hoặc link Script.");
+      alert("❌ Lỗi kết nối!");
     } finally {
       setIsCalculating(false);
     }
