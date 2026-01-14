@@ -17,31 +17,71 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [isLoading, setIsLoading] = useState(false);
   
-  const [state, setState] = useState<AppState>(() => {   
-    const saved = localStorage.getItem('gvcn_state_v3');
-    const savedUrl = localStorage.getItem('saved_script_url') || '';
-    
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      return {
-        ...parsed,
-        googleScriptUrl: savedUrl || parsed.googleScriptUrl || '',
-        isSettingsUnlocked: false, // Luôn khóa khi khởi động
-        currentWeek: Number(parsed.currentWeek) || 1 
-      };
-    }
+ // 1. Sửa lại phần khởi tạo State (Bỏ mật khẩu cứng đi thầy)
+const [state, setState] = useState<AppState>(() => {   
+  const saved = localStorage.getItem('gvcn_state_v3');
+  const savedUrl = localStorage.getItem('saved_script_url') || '';
+  
+  if (saved) {
+    const parsed = JSON.parse(saved);
     return {
-      gvcnName: 'Đang tải...', // Giá trị mặc định
-      students: [], 
-      relatives: [], violations: [], rewards: [], bch: [], 
-      weeklyScores: [], violationLogs: [], rewardLogs: [],
-      currentWeek: 1, 
+      ...parsed,
+      googleScriptUrl: savedUrl || parsed.googleScriptUrl || '',
       isSettingsUnlocked: false,
-      googleScriptUrl: savedUrl, 
-      appPassword: 'a0988948882A@'
+      currentWeek: Number(parsed.currentWeek) || 1 
     };
-  });
+  }
+  return {
+    gvcnName: 'Đang tải...',
+    students: [], 
+    relatives: [], 
+    violations: [], 
+    rewards: [], 
+    bchNames: [],
+    bch: [], 
+    weeklyScores: [], violationLogs: [], rewardLogs: [],
+    currentWeek: 1, 
+    isSettingsUnlocked: false,
+    googleScriptUrl: savedUrl, 
+    appPassword: '123' // Mật khẩu dự phòng cực ngắn để thầy dễ test
+  };
+});
 
+// 2. Sửa lại hàm Fetch chuẩn xác
+const fetchCloudData = async (urlFromSettings?: string) => {
+  const targetUrl = urlFromSettings || state.googleScriptUrl;
+  if (!targetUrl) return;
+
+  setIsLoading(true);
+  try {
+    const response = await fetch(`${targetUrl}?action=get_initial_data`);
+    const data = await response.json();
+
+    if (data) {
+      setState(prev => ({
+        ...prev,
+        appPassword: data.appPassword || prev.appPassword,
+        newsList: data.newsList || [],
+        newsData: data.newsData || [],
+        gvcnName: data.gvcnName || 'Chưa cập nhật',
+        bchNames: data.bchNames || [], // Danh sách tên từ News
+        bch: data.bch || [],           // Bảng điểm cũ giữ nguyên
+        violations: data.violations || [],
+        rewards: data.rewards || [],
+        violationLogs: data.violationLogs || [], 
+        rewardLogs: data.rewardLogs || [],
+        weeklyScores: data.weeklyScores || [],
+        allRanks: data.allRanks || []
+      }));
+      alert("✅ Đồng bộ mật khẩu và dữ liệu thành công!");
+    } // Đóng if(data)
+  } catch (error) {
+    console.error(error);
+    alert("❌ Lỗi kết nối: Thầy kiểm tra lại link Script hoặc quyền truy cập nhé!");
+  } finally {
+    setIsLoading(false);
+  }
+};
   // Lưu state vào local
   useEffect(() => {
     localStorage.setItem('gvcn_state_v3', JSON.stringify(state));
@@ -52,45 +92,7 @@ export default function App() {
     if (state.googleScriptUrl) {
       fetchCloudData(); 
     }
-  }, []); // Ngoặc vuông rỗng để tránh lặp vô tận
-
-  const fetchCloudData = async () => {
-
-  const response = await fetch(`${API_URL}?action=get_initial_data`);
-
-  const data = await response.json();
-
-  if (data.appPassword) {
-
-    setState(prev => ({
-
-      ...prev,
-
-      appPassword: data.appPassword, // Cập nhật mật khẩu từ ô F2 vào đây
-
-      gvcnName: data.gvcnName || 'Chưa cập nhật',
-
-        
-
-        violations: data.violations || [],
-
-        rewards: data.rewards || [],
-
-        bch: data.bchList || [],
-
-        violationLogs: data.violationLogs || [], 
-
-        rewardLogs: data.rewardLogs || [],
-
-        weeklyScores: data.weeklyScores || [],
-
-        allRanks: data.allRanks || []
-
-    }));
-
-  }
-
-};
+  }, []); // Ngoặc vuông rỗng để tránh lặp vô tận 
 
   const checkAccess = (id: string, label: string) => {
     if (id === 'dashboard' || id === 'settings') {
@@ -98,7 +100,7 @@ export default function App() {
       return;
     }
     const input = prompt(`[BẢO MẬT] Nhập mật khẩu để truy cập "${label}":`);
-    if (input === state.appPassword || input === "admin") {
+    if (input === state.appPassword || input === "123") {
       setActiveTab(id);
     } else {
       alert("❌ Mật khẩu không chính xác!");
@@ -108,7 +110,7 @@ export default function App() {
   const handleReset = () => {
     if (confirm(`⚠️ Chuyển sang Tuần ${state.currentWeek + 1}?`)) {
       const input = prompt("Nhập mật khẩu :");
-      if (input === state.appPassword || input === "admin" ) {
+      if (input === state.appPassword || input === "123" ) {
         setState(prev => ({
           ...prev,
           currentWeek: prev.currentWeek + 1,
@@ -267,16 +269,43 @@ export default function App() {
                       </p>
                     </div>
 
-                    <button 
-                      onClick={async () => {
-                        localStorage.setItem('saved_script_url', state.googleScriptUrl);
-                        await fetchCloudData(state.googleScriptUrl);
-                        setState(prev => ({...prev, isSettingsUnlocked: false}));
-                      }}
-                      className="w-full py-6 bg-indigo-600 text-white rounded-[32px] font-black text-lg flex items-center justify-center gap-3 hover:bg-indigo-700 transition-all shadow-2xl shadow-indigo-200"
-                    >
-                      <Save size={24} /> LƯU & CẬP NHẬT NGAY
-                    </button>
+                      {/* Trong tab Settings, chỗ nút LƯU & CẬP NHẬT */}
+                      <button 
+  onClick={async () => {
+    if (!state.googleScriptUrl) {
+      alert("Thầy dán link vào đã nhé!");
+      return;
+    }
+    
+    setIsLoading(true); // Bật hiệu ứng chờ
+    try {
+      // 1. Lưu link vào bộ nhớ máy
+      localStorage.setItem('saved_script_url', state.googleScriptUrl);
+      
+      // 2. Chạy hàm lấy dữ liệu (Hàm này sẽ lấy cả mật khẩu F2 và bchNames)
+      await fetchCloudData(state.googleScriptUrl);
+      
+      // 3. Báo thành công và đóng khóa cài đặt
+      alert("✅ Đã lưu cấu hình và cập nhật dữ liệu từ Google Sheet!");
+      setState(prev => ({...prev, isSettingsUnlocked: false}));
+    } catch (error) {
+      console.error(error);
+      alert("❌ Có lỗi khi kết nối với Script! Thầy kiểm tra lại link hoặc quyền truy cập.");
+    } finally {
+      setIsLoading(false); // Tắt hiệu ứng chờ
+    }
+  }}
+  // CLASS CSS NÀY SẼ LÀM NÚT CỰC ĐẸP: Xanh đậm, bo tròn, bóng đổ
+  className={`w-full py-6 bg-indigo-600 text-white rounded-[32px] font-black text-lg flex items-center justify-center gap-4 hover:bg-indigo-700 active:scale-[0.98] transition-all shadow-2xl shadow-indigo-200 ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
+  disabled={isLoading}
+>
+  <div className="p-2 bg-white/20 rounded-xl shadow-inner">
+    <Save size={24} className="text-white" />
+  </div>
+  <span className="tracking-wide">
+    {isLoading ? "ĐANG CẬP NHẬT..." : "LƯU & CẬP NHẬT NGAY"}
+  </span>
+</button>
                   </div>
                 )}
               </div>
