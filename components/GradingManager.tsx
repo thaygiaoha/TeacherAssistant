@@ -112,36 +112,39 @@ export const GradingManager = ({ state, setState }: any) => {
   }, [state, mode, subMode, range, quota, exceptions]);
 
  const handleSave = async () => {
-  if (!state.googleScriptUrl) return alert("❌ Thầy chưa dán link Script!");
-  
-  setIsCalculating(true);
-  try {
-    // 1. Chuẩn bị dữ liệu
-    const scores = sortedStudents.map((s: any) => ({ idhs: s.idhs, value: s.totalScore }));
-    const ranks = sortedStudents.map((s: any) => ({ idhs: s.idhs, value: s.finalRank }));
+    if (!state.googleScriptUrl) return alert("❌ Thầy dán link Script vào cài đặt nhé!");
+    setIsCalculating(true);
+    
+    try {
+      // Chuẩn bị dữ liệu đúng cấu trúc Script cần
+      const scores = sortedStudents.map((s: any) => ({ 
+        idhs: s.idhs, 
+        totalScore: s.totalScore  // Tên phải giống trong Script
+      }));
+      const ranks = sortedStudents.map((s: any) => ({ 
+        idhs: s.idhs, 
+        finalRank: s.finalRank    // Tên phải giống trong Script
+      }));
 
-    // 2. Gửi dữ liệu (Dùng JSON.stringify chuẩn)
-    const response = await fetch(state.googleScriptUrl, {
-      method: 'POST',
-      mode: 'no-cors',
-      cache: 'no-cache',
-      body: JSON.stringify({
-        action: 'save_grading_bulk',
-        week: state.currentWeek,
-        scores: scores,
-        ranks: ranks
-      })
-    });
+      await fetch(state.googleScriptUrl, {
+        method: 'POST',
+        mode: 'no-cors', 
+        body: JSON.stringify({
+          action: 'save_grading_bulk',
+          week: state.currentWeek,
+          scores: scores,
+          ranks: ranks
+        })
+      });
 
-    alert(`🎉 Thành công! Đã chốt dữ liệu tuần ${state.currentWeek}.`);
-  } catch (err) {
-    console.error("Lỗi kết nối:", err);
-    alert("❌ Lỗi kết nối! Thầy hãy Deploy lại Script bản mới nhất nhé.");
-  } finally {
-    setIsCalculating(false);
-  }
-};
-
+      alert(`🎉 Tuyệt vời! Đã chốt xong dữ liệu Tuần ${state.currentWeek} lên Google Sheet.`);
+    } catch (err) {
+      console.error(err);
+      alert("❌ Lỗi kết nối! Thầy kiểm tra lại mạng hoặc link Script.");
+    } finally {
+      setIsCalculating(false);
+    }
+  };
   return (
     <div className="max-w-6xl mx-auto space-y-6 pb-32 p-4">
       {/* THANH ĐIỀU HƯỚNG CHẾ ĐỘ */}
