@@ -54,20 +54,17 @@ const fetchCloudData = async (urlFromSettings?: string) => {
 
   setIsLoading(true);
   try {
-    // SỬA CHỖ NÀY: Dùng dấu huyền ` và thêm { mode: 'cors' } hoặc 'no-cors'
-    const response = await fetch(`${targetUrl}?action=get_initial_data`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
+    // SỬA: Bỏ Headers vì Google Script GET không cho phép Custom Headers dễ gây lỗi CORS
+    const response = await fetch(`${targetUrl}?action=get_initial_data`);
     
+    if (!response.ok) throw new Error("Network response was not ok");
+
     const data = await response.json();
 
-    if (data) {
+    if (data && data.status !== "error") {
       setState(prev => ({
         ...prev,
-        appPassword: data.appPassword || prev.appPassword,
+       appPassword: data.appPassword || prev.appPassword,
         newsList: data.newsList || [],
         newsData: data.newsData || [],
         gvcnName: data.gvcnName || 'Chưa cập nhật',
@@ -80,15 +77,19 @@ const fetchCloudData = async (urlFromSettings?: string) => {
         weeklyScores: data.weeklyScores || [],
         allRanks: data.allRanks || []
       }));
-      alert("✅ Đồng bộ thành công!");
+      // Không để alert ở đây
+    } else {
+      throw new Error(data.message || "Dữ liệu trống");
     }
   } catch (error) {
     console.error("Lỗi chi tiết:", error);
-    alert("❌ Lỗi kết nối! Thầy kiểm tra lại quyền 'Anyone' của Script nhé.");
+    // Ném lỗi ra ngoài để hàm cha xử lý
+    throw error; 
   } finally {
     setIsLoading(false);
   }
 };
+
   // Lưu state vào local
   useEffect(() => {
     localStorage.setItem('gvcn_state_v3', JSON.stringify(state));
