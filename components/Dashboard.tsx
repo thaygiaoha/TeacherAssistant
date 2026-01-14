@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Newspaper, Users, Award, Camera, ChevronRight, 
-  ExternalLink, UserCircle2, X, Search, Activity, Calendar 
+  ExternalLink, UserCircle2, X, Search, Activity, Calendar, GraduationCap 
 } from 'lucide-react';
 
 export const Dashboard = ({ state, setState, setActiveTab }: any) => {
@@ -12,6 +12,16 @@ export const Dashboard = ({ state, setState, setActiveTab }: any) => {
   const photos = state.newsData || []; 
   const newsList = state.newsList || []; 
   const bchNames = state.bchNames || [];
+
+  // HÀM BỔ TRỢ: Chuyển link Drive (Để ngoài để tối ưu hiệu suất)
+  const getDirectImg = (url: string) => {
+    if (!url) return null;
+    if (url.includes('drive.google.com')) {
+      const id = url.split('/d/')[1]?.split('/')[0] || url.split('id=')[1]?.split('&')[0];
+      return id ? `https://drive.google.com/uc?id=${id}` : url;
+    }
+    return url;
+  };
 
   useEffect(() => {
     if (photos.length > 0) {
@@ -174,50 +184,39 @@ export const Dashboard = ({ state, setState, setActiveTab }: any) => {
 
             <div className="flex-1 overflow-y-auto p-8 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6 custom-scrollbar bg-slate-50/50">
               {(state.students || [])
-  .filter((s: any) => s.name.toLowerCase().includes(searchMember.toLowerCase()) || (s.idhs && s.idhs.toString().includes(searchMember)))
-  .map((student: any, idx: number) => {
-    // HÀM BỔ TRỢ: Tự động sửa link Google Drive nếu thầy dán nhầm link chia sẻ
-    const getDirectImg = (url: string) => {
-      if (!url) return null;
-      if (url.includes('drive.google.com')) {
-        const id = url.split('/d/')[1]?.split('/')[0] || url.split('id=')[1]?.split('&')[0];
-        return id ? `https://drive.google.com/uc?id=${id}` : url;
-      }
-      return url;
-    };
+                .filter((s: any) => s.name.toLowerCase().includes(searchMember.toLowerCase()) || (s.idhs && s.idhs.toString().includes(searchMember)))
+                .map((student: any, idx: number) => (
+                  <div key={idx} className="bg-white rounded-[32px] p-4 border border-slate-100 hover:border-indigo-500 hover:shadow-2xl transition-all text-center group">
+                    <div className="w-full aspect-[3/4] rounded-2xl bg-slate-50 mb-4 overflow-hidden relative shadow-inner border border-slate-50">
+                      {student.imglink ? (
+                        <img 
+                          src={getDirectImg(student.imglink)} 
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+                          alt={student.name}
+                          onError={(e) => { e.currentTarget.src = "https://via.placeholder.com/150?text=No+Image"; }}
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-slate-200">
+                          <GraduationCap size={48} />
+                        </div>
+                      )}
+                      <div className="absolute bottom-2 right-2 bg-black/20 backdrop-blur-md px-2 py-0.5 rounded-full text-[8px] text-white font-bold">
+                        ID: {student.idhs}
+                      </div>
+                    </div>
 
-    return (
-      <div key={idx} className="bg-white rounded-[32px] p-4 border border-slate-100 hover:border-indigo-500 hover:shadow-2xl transition-all text-center group">
-        {/* KHUNG ẢNH THẺ 3x4 */}
-        <div className="w-full aspect-[3/4] rounded-2xl bg-slate-50 mb-4 overflow-hidden relative shadow-inner border border-slate-50">
-          {student.imglink ? (
-            <img 
-              src={getDirectImg(student.imglink)} 
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
-              alt={student.name}
-              onError={(e) => { e.currentTarget.src = "https://via.placeholder.com/150?text=No+Image"; }}
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center text-slate-200">
-              <GraduationCap size={48} />
+                    <div className="font-black text-slate-800 text-sm leading-tight mb-1 uppercase tracking-tight group-hover:text-indigo-600 transition-colors">
+                      {student.name}
+                    </div>
+                    <div className="text-[10px] text-slate-400 font-bold uppercase tracking-widest opacity-60">
+                      Học sinh lớp {student.class || '...'}
+                    </div>
+                  </div>
+                ))}
             </div>
-          )}
-          {/* Tag IDHS nhỏ đè lên ảnh cho chuyên nghiệp */}
-          <div className="absolute bottom-2 right-2 bg-black/20 backdrop-blur-md px-2 py-0.5 rounded-full text-[8px] text-white font-bold">
-            ID: {student.idhs}
           </div>
         </div>
-
-        {/* THÔNG TIN HỌC SINH */}
-        <div className="font-black text-slate-800 text-sm leading-tight mb-1 uppercase tracking-tight group-hover:text-indigo-600 transition-colors">
-          {student.name}
-        </div>
-        <div className="text-[10px] text-slate-400 font-bold uppercase tracking-widest opacity-60">
-          Học sinh lớp {student.class || '...'}
-        </div>
-      </div>
-    );
-  })}
+      )}
     </div>
   );
 };
