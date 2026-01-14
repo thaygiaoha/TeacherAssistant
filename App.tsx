@@ -54,7 +54,14 @@ const fetchCloudData = async (urlFromSettings?: string) => {
 
   setIsLoading(true);
   try {
-    const response = await fetch(`${targetUrl}?action=get_initial_data`);
+    // SỬA CHỖ NÀY: Dùng dấu huyền ` và thêm { mode: 'cors' } hoặc 'no-cors'
+    const response = await fetch(`${targetUrl}?action=get_initial_data`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    
     const data = await response.json();
 
     if (data) {
@@ -64,8 +71,8 @@ const fetchCloudData = async (urlFromSettings?: string) => {
         newsList: data.newsList || [],
         newsData: data.newsData || [],
         gvcnName: data.gvcnName || 'Chưa cập nhật',
-        bchNames: data.bchNames || [], // Danh sách tên từ News
-        bch: data.bch || [],           // Bảng điểm cũ giữ nguyên
+        bchNames: data.bchNames || [],
+        bch: data.bch || [],
         violations: data.violations || [],
         rewards: data.rewards || [],
         violationLogs: data.violationLogs || [], 
@@ -73,11 +80,11 @@ const fetchCloudData = async (urlFromSettings?: string) => {
         weeklyScores: data.weeklyScores || [],
         allRanks: data.allRanks || []
       }));
-      alert("✅ Đồng bộ mật khẩu và dữ liệu thành công!");
-    } // Đóng if(data)
+      alert("✅ Đồng bộ thành công!");
+    }
   } catch (error) {
-    console.error(error);
-    alert("❌ Lỗi kết nối: Thầy kiểm tra lại link Script hoặc quyền truy cập nhé!");
+    console.error("Lỗi chi tiết:", error);
+    alert("❌ Lỗi kết nối! Thầy kiểm tra lại quyền 'Anyone' của Script nhé.");
   } finally {
     setIsLoading(false);
   }
