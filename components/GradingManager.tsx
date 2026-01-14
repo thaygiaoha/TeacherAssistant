@@ -13,9 +13,8 @@ export const GradingManager = ({ state, setState }: any) => {
   const [selectedExRank, setSelectedExRank] = useState('Chưa Đạt');
 
  // --- 1. LOGIC TÍNH TOÁN ĐIỂM VÀ XẾP LOẠI ---
-// --- 1. LOGIC TÍNH TOÁN ĐIỂM VÀ XẾP LOẠI ---
- const finalGrades = useMemo(() => {
-    // 1. Tạo bản đồ điểm từ danh mục (Lấy điểm tuyệt đối)
+const finalGrades = useMemo(() => {
+    // 1. Bản đồ điểm (violations, rewards, bch)
     const scoreMap: Record<string, number> = {};
     state.violations?.forEach((v: any) => { scoreMap[String(v.codeRule).trim().toUpperCase()] = Math.abs(Number(v.points) || 0); });
     state.rewards?.forEach((r: any) => { scoreMap[String(r.codeBonus).trim().toUpperCase()] = Math.abs(Number(r.points) || 0); });
@@ -23,37 +22,44 @@ export const GradingManager = ({ state, setState }: any) => {
 
     // 2. Duyệt danh sách học sinh
     let list = state.students.map((student: any) => {
-      let totalScore = 100; // Điểm gốc mỗi tuần
+      let totalScore = 100; // Reset 100 điểm mỗi tuần
       let autoRank = 'Không XL';
       const sId = String(student.idhs).trim();
-      const currentWeekKey = `Tuần ${state.currentWeek}`; // Tạo key để tìm đúng tuần hiện tại
+      const targetWeek = String(state.currentWeek); // Số 5 từ giao diện của thầy
 
       if (mode === 'week') {
-        // --- TÍNH ĐIỂM TRỪ THEO TUẦN HIỆN TẠI ---
+        // --- TÍNH ĐIỂM TRỪ ---
         const vLog = state.violationLogs?.find((l: any) => String(l.idhs).trim() === sId);
-        if (vLog && vLog.v_logs && vLog.v_logs[currentWeekKey]) {
-          const codesInWeek = vLog.v_logs[currentWeekKey]; // Lấy mảng lỗi của đúng tuần này
-          if (Array.isArray(codesInWeek)) {
-            codesInWeek.forEach(code => {
-              const pts = scoreMap[String(code).trim().toUpperCase()] || 0;
-              totalScore -= pts; // Vi phạm bao nhiêu lần trừ bấy nhiêu lần
-            });
+        if (vLog && vLog.v_logs) {
+          // Tìm tuần khớp với số hiện tại (ví dụ: tìm "Tuần 5" hoặc "5" hoặc "w5")
+          const weekKey = Object.keys(vLog.v_logs).find(k => k.replace(/\D/g, '') === targetWeek);
+          
+          if (weekKey) {
+            const codes = vLog.v_logs[weekKey];
+            if (Array.isArray(codes)) {
+              codes.forEach(code => {
+                const pts = scoreMap[String(code).trim().toUpperCase()] || 0;
+                totalScore -= pts; // Vi phạm 3 lần V01 thì trừ 3 lần điểm
+              });
+            }
           }
         }
 
-        // --- TÍNH ĐIỂM THƯỞNG THEO TUẦN HIỆN TẠI ---
+        // --- TÍNH ĐIỂM THƯỞNG ---
         const rLog = state.rewardLogs?.find((l: any) => String(l.idhs).trim() === sId);
-        if (rLog && rLog.t_logs && rLog.t_logs[currentWeekKey]) {
-          const bonusInWeek = rLog.t_logs[currentWeekKey];
-          if (Array.isArray(bonusInWeek)) {
-            bonusInWeek.forEach(code => {
-              const pts = scoreMap[String(code).trim().toUpperCase()] || 0;
-              totalScore += pts; // Thưởng bao nhiêu lần cộng bấy nhiêu lần
-            });
+        if (rLog && rLog.t_logs) {
+          const weekKey = Object.keys(rLog.t_logs).find(k => k.replace(/\D/g, '') === targetWeek);
+          if (weekKey) {
+            const codes = rLog.t_logs[weekKey];
+            if (Array.isArray(codes)) {
+              codes.forEach(code => {
+                const pts = scoreMap[String(code).trim().toUpperCase()] || 0;
+                totalScore += pts;
+              });
+            }
           }
         }
       } else if (mode === 'semester') {
-        // ... giữ nguyên logic học kỳ
         totalScore = 0;
         const sRow = state.weeklyScores?.find((r: any) => String(r.idhs).trim() === sId);
         if (sRow && sRow.weeks) {
@@ -66,7 +72,7 @@ export const GradingManager = ({ state, setState }: any) => {
       return { ...student, totalScore, autoRank };
     });
 
-    // 3. Phân hạng theo chỉ tiêu (Giữ nguyên đoạn này của thầy)
+    // 3. Phân hạng (Giữ nguyên logic xếp hạng của thầy)
     if (mode !== 'year') {
       list.sort((a, b) => b.totalScore - a.totalScore);
       let currentIdx = 0;
