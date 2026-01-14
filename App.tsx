@@ -64,7 +64,7 @@ const fetchCloudData = async (urlFromSettings?: string) => {
     if (data && data.status !== "error") {
       setState(prev => ({
         ...prev,
-       appPassword: data.appPassword || prev.appPassword,
+        appPassword: data.appPassword || prev.appPassword,
         newsList: data.newsList || [],
         newsData: data.newsData || [],
         gvcnName: data.gvcnName || 'Chưa cập nhật',
