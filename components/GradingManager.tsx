@@ -14,43 +14,46 @@ export const GradingManager = ({ state, setState }: any) => {
 
  // --- 1. LOGIC TÍNH TOÁN ĐIỂM VÀ XẾP LOẠI ---
 // --- 1. LOGIC TÍNH TOÁN ĐIỂM VÀ XẾP LOẠI ---
-  const finalGrades = useMemo(() => {
-    // A. Bản đồ điểm từ danh mục
+ const finalGrades = useMemo(() => {
+    // 1. Tạo bản đồ điểm từ danh mục (Lấy điểm tuyệt đối)
     const scoreMap: Record<string, number> = {};
     state.violations?.forEach((v: any) => { scoreMap[String(v.codeRule).trim().toUpperCase()] = Math.abs(Number(v.points) || 0); });
     state.rewards?.forEach((r: any) => { scoreMap[String(r.codeBonus).trim().toUpperCase()] = Math.abs(Number(r.points) || 0); });
     state.bch?.forEach((b: any) => { scoreMap[String(b.codeTitle).trim().toUpperCase()] = Math.abs(Number(b.points) || 0); });
 
-    // B. Duyệt danh sách học sinh
+    // 2. Duyệt danh sách học sinh
     let list = state.students.map((student: any) => {
-      let totalScore = 100;
+      let totalScore = 100; // Điểm gốc mỗi tuần
       let autoRank = 'Không XL';
       const sId = String(student.idhs).trim();
+      const currentWeekKey = `Tuần ${state.currentWeek}`; // Tạo key để tìm đúng tuần hiện tại
 
       if (mode === 'week') {
-        // TÍNH ĐIỂM TRỪ (v_logs là Object)
+        // --- TÍNH ĐIỂM TRỪ THEO TUẦN HIỆN TẠI ---
         const vLog = state.violationLogs?.find((l: any) => String(l.idhs).trim() === sId);
-        if (vLog && vLog.v_logs) {
-          Object.values(vLog.v_logs).forEach((codes: any) => {
-            if (Array.isArray(codes)) {
-              codes.forEach(c => {
-                totalScore -= (scoreMap[String(c).trim().toUpperCase()] || 0);
-              });
-            }
-          });
+        if (vLog && vLog.v_logs && vLog.v_logs[currentWeekKey]) {
+          const codesInWeek = vLog.v_logs[currentWeekKey]; // Lấy mảng lỗi của đúng tuần này
+          if (Array.isArray(codesInWeek)) {
+            codesInWeek.forEach(code => {
+              const pts = scoreMap[String(code).trim().toUpperCase()] || 0;
+              totalScore -= pts; // Vi phạm bao nhiêu lần trừ bấy nhiêu lần
+            });
+          }
         }
-        // TÍNH ĐIỂM THƯỞNG
+
+        // --- TÍNH ĐIỂM THƯỞNG THEO TUẦN HIỆN TẠI ---
         const rLog = state.rewardLogs?.find((l: any) => String(l.idhs).trim() === sId);
-        if (rLog && rLog.t_logs) {
-          Object.values(rLog.t_logs).forEach((codes: any) => {
-            if (Array.isArray(codes)) {
-              codes.forEach(c => {
-                totalScore += (scoreMap[String(c).trim().toUpperCase()] || 0);
-              });
-            }
-          });
+        if (rLog && rLog.t_logs && rLog.t_logs[currentWeekKey]) {
+          const bonusInWeek = rLog.t_logs[currentWeekKey];
+          if (Array.isArray(bonusInWeek)) {
+            bonusInWeek.forEach(code => {
+              const pts = scoreMap[String(code).trim().toUpperCase()] || 0;
+              totalScore += pts; // Thưởng bao nhiêu lần cộng bấy nhiêu lần
+            });
+          }
         }
       } else if (mode === 'semester') {
+        // ... giữ nguyên logic học kỳ
         totalScore = 0;
         const sRow = state.weeklyScores?.find((r: any) => String(r.idhs).trim() === sId);
         if (sRow && sRow.weeks) {
@@ -58,25 +61,21 @@ export const GradingManager = ({ state, setState }: any) => {
             totalScore += Number(sRow.weeks[`w${w}`] || 0);
           }
         }
-      } else if (mode === 'year') {
-        autoRank = 'Chưa chốt';
       }
 
       return { ...student, totalScore, autoRank };
     });
 
-    // D. Phân hạng theo chỉ tiêu (Quota)
+    // 3. Phân hạng theo chỉ tiêu (Giữ nguyên đoạn này của thầy)
     if (mode !== 'year') {
       list.sort((a, b) => b.totalScore - a.totalScore);
       let currentIdx = 0;
       const rankedList = list.map(s => ({ ...s, autoRank: 'Chưa đạt' }));
-
       const applyRank = (rankName: string, targetCount: number) => {
         let count = Number(targetCount);
         if (count <= 0 || currentIdx >= rankedList.length) return;
         let lastIdx = Math.min(currentIdx + count - 1, rankedList.length - 1);
         const threshold = rankedList[lastIdx].totalScore;
-
         for (let i = currentIdx; i < rankedList.length; i++) {
           if (i <= lastIdx || rankedList[i].totalScore === threshold) {
             rankedList[i].autoRank = rankName;
@@ -84,7 +83,6 @@ export const GradingManager = ({ state, setState }: any) => {
           } else break;
         }
       };
-
       applyRank('Tốt', quota.tot);
       applyRank('Khá', quota.kha);
       applyRank('Đạt', quota.dat);
@@ -92,12 +90,13 @@ export const GradingManager = ({ state, setState }: any) => {
       list = rankedList;
     }
 
-    // E. Xử lý ngoại lệ
     return list.map(s => {
       const ex = exceptions.find(e => e.idhs === s.idhs);
       return { ...s, finalRank: ex ? ex.rank : s.autoRank, isManual: !!ex };
     });
   }, [state, mode, range, quota, exceptions]);
+
+  // =================
 const handleSave = async () => {
     if (!state.googleScriptUrl) return alert("❌ Chưa có link Script!");
     setIsCalculating(true);
