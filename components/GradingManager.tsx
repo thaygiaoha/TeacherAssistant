@@ -15,16 +15,18 @@ export const GradingManager = ({ state, setState }: any) => {
   const finalGrades = useMemo(() => {
     // 1. Bản đồ điểm tra cứu từ các bảng danh mục
     const scoreMap: Record<string, number> = {};
+   const scoreMap: Record<string, number> = {};
     const buildScoreMap = (data: any[]) => {
       data?.forEach(item => {
-        const code = String(item.codeRule || item[0] || "").trim().toUpperCase();
-        const pts = Math.abs(Number(item.points || item[2]) || 0);
+        // Tối ưu: Xóa khoảng trắng và chuyển về chữ HOA để so khớp chính xác
+        const code = String(item.codeRule || "").trim().toUpperCase();
+        const pts = Math.abs(Number(item.points) || 0);
         if (code) scoreMap[code] = pts;
       });
     };
-    buildScoreMap(state.violations);
-    buildScoreMap(state.rewards);
-    buildScoreMap(state.bch);
+    buildScoreMap(state.violations); // Bảng lỗi
+    buildScoreMap(state.rewards);    // Bảng thưởng (nếu có mã)
+    buildScoreMap(state.bch);        // Bảng BCH
 
     // 2. Quy tắc Cả năm T-T=T, T-K=K...
     const yearRule: Record<string, string> = {
