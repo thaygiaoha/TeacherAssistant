@@ -11,7 +11,7 @@ export interface Student {
   accommodation: string;
   cccd: string;
   idhs: string;
-  image: string;
+  imglink?: string;
 }
 // người thân
 export interface RelativeInfo {
