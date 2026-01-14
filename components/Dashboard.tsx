@@ -189,12 +189,15 @@ export const Dashboard = ({ state, setState, setActiveTab }: any) => {
                   <div key={idx} className="bg-white rounded-[32px] p-4 border border-slate-100 hover:border-indigo-500 hover:shadow-2xl transition-all text-center group">
                     <div className="w-full aspect-[3/4] rounded-2xl bg-slate-50 mb-4 overflow-hidden relative shadow-inner border border-slate-50">
                       {student.imglink ? (
-                        <img 
-                          src={getDirectImg(student.imglink)} 
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
-                          alt={student.name}
-                          onError={(e) => { e.currentTarget.src = "https://via.placeholder.com/150?text=No+Image"; }}
-                        />
+                       <img 
+                        src={student.imglink} 
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+                        alt={student.name}
+                        onError={(e) => { 
+                        console.log("Lỗi load ảnh tại link:", student.imglink);
+                        e.currentTarget.src = "https://via.placeholder.com/150?text=Loi+Link"; 
+                        }}
+/>
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-slate-200">
                           <GraduationCap size={48} />
