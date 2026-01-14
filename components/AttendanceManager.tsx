@@ -25,23 +25,31 @@ const payload = status + " " + dateStr; // Kết quả: "P 13/01/2026"
   if (!state.googleScriptUrl) return alert("Chưa có link Script!");
   setLoading(true);
   
-  // Gom tất cả trạng thái của cả lớp vào 1 mảng
-  const bulkUpdates = state.students.map((s: any) => ({
-    studentId: s.idhs,
-    payload: (attendance[s.idhs] || 'OK') + " " + dateStr
-  }));
+  // 1. Chỉ lấy những em Vắng (P hoặc KP), bỏ qua những em 'OK'
+  const bulkUpdates = state.students
+    .filter((s: any) => attendance[s.idhs] && attendance[s.idhs] !== 'OK') 
+    .map((s: any) => ({
+      studentId: s.idhs,
+      payload: attendance[s.idhs] + " " + dateStr // Ví dụ: "P 14/01"
+    }));
+
+  if (bulkUpdates.length === 0) {
+    alert("✅ Cả lớp đi học đủ, không cần ghi lên Sheet!");
+    setLoading(false);
+    return;
+  }
 
   try {
     await fetch(state.googleScriptUrl, {
       method: 'POST',
       mode: 'no-cors',
       body: JSON.stringify({
-        action: 'update_attendance_bulk',
+        action: 'update_bulk',
         target: 'diemdanh',
-        updates: bulkUpdates // Gửi nguyên danh sách
+        updates: bulkUpdates
       })
     });
-    alert("✅ Đã điểm danh xong cả lớp!");
+    alert(`✅ Đã ghi danh sách ${bulkUpdates.length} em vắng lên Sheet!`);
   } catch (err) {
     alert("❌ Lỗi kết nối!");
   } finally {
