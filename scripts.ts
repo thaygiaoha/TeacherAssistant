@@ -128,3 +128,4 @@ function testPermission() {
   SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName("news").getRange("H2").getValue();
   console.log("Cấp quyền thành công!");
 }
+
