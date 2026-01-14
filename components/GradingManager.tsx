@@ -13,6 +13,7 @@ export const GradingManager = ({ state, setState }: any) => {
   const [selectedExRank, setSelectedExRank] = useState('Chưa Đạt');
 
  // --- 1. LOGIC TÍNH TOÁN ĐIỂM VÀ XẾP LOẠI ---
+// --- 1. LOGIC TÍNH TOÁN ĐIỂM VÀ XẾP LOẠI ---
   const finalGrades = useMemo(() => {
     // A. Bản đồ điểm từ danh mục
     const scoreMap: Record<string, number> = {};
@@ -20,61 +21,37 @@ export const GradingManager = ({ state, setState }: any) => {
     state.rewards?.forEach((r: any) => { scoreMap[String(r.codeBonus).trim().toUpperCase()] = Math.abs(Number(r.points) || 0); });
     state.bch?.forEach((b: any) => { scoreMap[String(b.codeTitle).trim().toUpperCase()] = Math.abs(Number(b.points) || 0); });
 
-    // B. Quy tắc tính Cả năm
-    const yearRule: Record<string, string> = {
-      'Tốt-Tốt': 'Tốt', 'Tốt-Khá': 'Khá', 'Khá-Tốt': 'Khá', 'Khá-Khá': 'Khá',
-      'Tốt-Đạt': 'Đạt', 'Khá-Đạt': 'Đạt', 'Đạt-Khá': 'Đạt', 'Đạt-Đạt': 'Đạt',
-      'Tốt-Chưa Đạt': 'Chưa Đạt', 'Chưa Đạt-Tốt': 'Chưa Đạt'
-    };
-
-    // C. Duyệt danh sách học sinh để tính điểm
+    // B. Duyệt danh sách học sinh
     let list = state.students.map((student: any) => {
-      let totalScore = 100; 
+      let totalScore = 100;
+      let autoRank = 'Không XL';
       const sId = String(student.idhs).trim();
 
       if (mode === 'week') {
-        // 1. TÍNH ĐIỂM TRỪ
+        // TÍNH ĐIỂM TRỪ (v_logs là Object)
         const vLog = state.violationLogs?.find((l: any) => String(l.idhs).trim() === sId);
-        if (vLog) {
-          // Nếu v_logs là Object (theo Interface thầy gửi)
-          if (vLog.v_logs && typeof vLog.v_logs === 'object') {
-            Object.values(vLog.v_logs).forEach((codes: any) => {
-              if (Array.isArray(codes)) {
-                codes.forEach(c => {
-                  const pts = scoreMap[String(c).trim().toUpperCase()] || 0;
-                  totalScore -= pts;
-                });
-              }
-            });
-          } 
-          // Dự phòng: Nếu vLog chính là mảng mã lỗi (phòng trường hợp cấu trúc phẳng)
-          else if (Array.isArray(vLog.codes)) {
-            vLog.codes.forEach((c: any) => {
-              totalScore -= (scoreMap[String(c).trim().toUpperCase()] || 0);
-            });
-          }
+        if (vLog && vLog.v_logs) {
+          Object.values(vLog.v_logs).forEach((codes: any) => {
+            if (Array.isArray(codes)) {
+              codes.forEach(c => {
+                totalScore -= (scoreMap[String(c).trim().toUpperCase()] || 0);
+              });
+            }
+          });
         }
-
-        // 2. TÍNH ĐIỂM THƯỞNG
+        // TÍNH ĐIỂM THƯỞNG
         const rLog = state.rewardLogs?.find((l: any) => String(l.idhs).trim() === sId);
-        if (rLog) {
-          if (rLog.t_logs && typeof rLog.t_logs === 'object') {
-            Object.values(rLog.t_logs).forEach((codes: any) => {
-              if (Array.isArray(codes)) {
-                codes.forEach(c => {
-                  totalScore += (scoreMap[String(c).trim().toUpperCase()] || 0);
-                });
-              }
-            });
-          } else if (Array.isArray(rLog.codes)) {
-            rLog.codes.forEach((c: any) => {
-              totalScore += (scoreMap[String(c).trim().toUpperCase()] || 0);
-            });
-          }
+        if (rLog && rLog.t_logs) {
+          Object.values(rLog.t_logs).forEach((codes: any) => {
+            if (Array.isArray(codes)) {
+              codes.forEach(c => {
+                totalScore += (scoreMap[String(c).trim().toUpperCase()] || 0);
+              });
+            }
+          });
         }
-      }
-      return { ...student, totalScore, autoRank: 'Không XL' };
-    });
+      } else if (mode === 'semester') {
+        totalScore = 0;
         const sRow = state.weeklyScores?.find((r: any) => String(r.idhs).trim() === sId);
         if (sRow && sRow.weeks) {
           for (let w = range.from; w <= range.to; w++) {
@@ -82,9 +59,7 @@ export const GradingManager = ({ state, setState }: any) => {
           }
         }
       } else if (mode === 'year') {
-        // Logic Cả năm (xếp loại dựa trên HK1, HK2)
-        // Phần này tùy thuộc vào cấu trúc state.allRanks của thầy
-        autoRank = 'Chưa chốt'; 
+        autoRank = 'Chưa chốt';
       }
 
       return { ...student, totalScore, autoRank };
@@ -95,13 +70,13 @@ export const GradingManager = ({ state, setState }: any) => {
       list.sort((a, b) => b.totalScore - a.totalScore);
       let currentIdx = 0;
       const rankedList = list.map(s => ({ ...s, autoRank: 'Chưa đạt' }));
-      
+
       const applyRank = (rankName: string, targetCount: number) => {
         let count = Number(targetCount);
         if (count <= 0 || currentIdx >= rankedList.length) return;
         let lastIdx = Math.min(currentIdx + count - 1, rankedList.length - 1);
         const threshold = rankedList[lastIdx].totalScore;
-        
+
         for (let i = currentIdx; i < rankedList.length; i++) {
           if (i <= lastIdx || rankedList[i].totalScore === threshold) {
             rankedList[i].autoRank = rankName;
@@ -117,13 +92,12 @@ export const GradingManager = ({ state, setState }: any) => {
       list = rankedList;
     }
 
-    // E. Xử lý ngoại lệ (Gán tay)
+    // E. Xử lý ngoại lệ
     return list.map(s => {
       const ex = exceptions.find(e => e.idhs === s.idhs);
       return { ...s, finalRank: ex ? ex.rank : s.autoRank, isManual: !!ex };
     });
   }, [state, mode, range, quota, exceptions]);
-
 const handleSave = async () => {
     if (!state.googleScriptUrl) return alert("❌ Chưa có link Script!");
     setIsCalculating(true);
