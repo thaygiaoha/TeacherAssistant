@@ -125,7 +125,6 @@ export const GradingManager = ({ state, setState }: any) => {
       method: 'POST',
       mode: 'no-cors',
       cache: 'no-cache',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         action: 'save_grading_bulk',
         week: state.currentWeek,
