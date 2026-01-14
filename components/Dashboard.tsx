@@ -15,13 +15,14 @@ export const Dashboard = ({ state, setState, setActiveTab }: any) => {
 
   // HÀM BỔ TRỢ: Chuyển link Drive (Để ngoài để tối ưu hiệu suất)
   const getDirectImg = (url: string) => {
-    if (!url) return null;
-    if (url.includes('drive.google.com')) {
-      const id = url.split('/d/')[1]?.split('/')[0] || url.split('id=')[1]?.split('&')[0];
-      return id ? `https://drive.google.com/uc?id=${id}` : url;
-    }
-    return url;
-  };
+  if (!url) return null;
+  if (url.includes('drive.google.com')) {
+    const id = url.split('/d/')[1]?.split('/')[0] || url.split('id=')[1]?.split('&')[0];
+    // Sử dụng link thumbnail chất lượng cao thay vì uc?id
+    return id ? `https://lh3.googleusercontent.com/d/${id}` : url;
+  }
+  return url;
+};
 
   useEffect(() => {
     if (photos.length > 0) {
