@@ -21,37 +21,41 @@ const payload = status + " " + dateStr; // Kết quả: "P 13/01/2026"
     }));
   };
 
-  const submitAttendance = async () => {
+ const submitAttendance = async () => {
   if (!state.googleScriptUrl) return alert("Chưa có link Script!");
   setLoading(true);
   
-  // 1. Chỉ lấy những em Vắng (P hoặc KP), bỏ qua những em 'OK'
+  // 1. Chỉ lấy những em Vắng (P hoặc KP)
   const bulkUpdates = state.students
     .filter((s: any) => attendance[s.idhs] && attendance[s.idhs] !== 'OK') 
     .map((s: any) => ({
       studentId: s.idhs,
-      payload: attendance[s.idhs] + " " + dateStr // Ví dụ: "P 14/01"
+      payload: attendance[s.idhs] + " " + dateStr
     }));
 
+  // Nếu không có em nào vắng thì không gọi API để tiết kiệm tài nguyên
   if (bulkUpdates.length === 0) {
-    alert("✅ Cả lớp đi học đủ, không cần ghi lên Sheet!");
+    alert("✅ Cả lớp đi học đủ (OK), không có dữ liệu vắng để ghi!");
     setLoading(false);
     return;
   }
 
   try {
-    await fetch(state.googleScriptUrl, {
+    const response = await fetch(state.googleScriptUrl, {
       method: 'POST',
-      mode: 'no-cors',
+      mode: 'no-cors', // Dùng no-cors cho Google Apps Script
+      cache: 'no-cache',
       body: JSON.stringify({
         action: 'update_bulk',
         target: 'diemdanh',
         updates: bulkUpdates
       })
     });
-    alert(`✅ Đã ghi danh sách ${bulkUpdates.length} em vắng lên Sheet!`);
+    
+    alert(`✅ Đã gửi thành công danh sách ${bulkUpdates.length} em vắng!`);
   } catch (err) {
-    alert("❌ Lỗi kết nối!");
+    console.error("Lỗi gửi điểm danh:", err);
+    alert("❌ Lỗi kết nối mạng hoặc Script!");
   } finally {
     setLoading(false);
   }
