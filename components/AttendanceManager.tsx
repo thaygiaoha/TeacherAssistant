@@ -22,31 +22,32 @@ const payload = status + " " + dateStr; // Kết quả: "P 13/01/2026"
   };
 
   const submitAttendance = async () => {
-    if (!state.googleScriptUrl) return alert("Chưa có link Script!");
-    setLoading(true);
-    try {
-      for (const s of state.students) {
-        // Nếu chưa bấm chọn thì mặc định là OK
-        const status = attendance[s.idhs] || 'OK'; 
-        await fetch(state.googleScriptUrl, {
-          method: 'POST',
-          mode: 'no-cors',
-          body: JSON.stringify({
-            action: 'update_record',
-            target: 'diemdanh',
-            studentId: s.idhs,
-            type: 'attendance',
-            payload: status
-          })
-        });
-      }
-      alert("✅ Đã đồng bộ điểm danh thành công!");
-    } catch (e) {
-      alert("Lỗi kết nối!");
-    } finally {
-      setLoading(false);
-    }
-  };
+  if (!state.googleScriptUrl) return alert("Chưa có link Script!");
+  setLoading(true);
+  
+  // Gom tất cả trạng thái của cả lớp vào 1 mảng
+  const bulkUpdates = state.students.map((s: any) => ({
+    studentId: s.idhs,
+    payload: (attendance[s.idhs] || 'OK') + " " + dateStr
+  }));
+
+  try {
+    await fetch(state.googleScriptUrl, {
+      method: 'POST',
+      mode: 'no-cors',
+      body: JSON.stringify({
+        action: 'update_attendance_bulk',
+        target: 'diemdanh',
+        updates: bulkUpdates // Gửi nguyên danh sách
+      })
+    });
+    alert("✅ Đã điểm danh xong cả lớp!");
+  } catch (err) {
+    alert("❌ Lỗi kết nối!");
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
