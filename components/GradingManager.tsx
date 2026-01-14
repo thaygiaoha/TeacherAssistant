@@ -29,35 +29,52 @@ export const GradingManager = ({ state, setState }: any) => {
 
     // C. Duyệt danh sách học sinh để tính điểm
     let list = state.students.map((student: any) => {
-      let totalScore = 100; // Mặc định 100 điểm
-      let autoRank = 'Không XL';
+      let totalScore = 100; 
       const sId = String(student.idhs).trim();
 
       if (mode === 'week') {
-        // TÍNH ĐIỂM TRỪ (v_logs là Object theo cấu trúc Interface của thầy)
+        // 1. TÍNH ĐIỂM TRỪ
         const vLog = state.violationLogs?.find((l: any) => String(l.idhs).trim() === sId);
-        if (vLog && vLog.v_logs) {
-          Object.values(vLog.v_logs).forEach((codes: any) => {
-            if (Array.isArray(codes)) {
-              codes.forEach(c => {
-                totalScore -= (scoreMap[String(c).trim().toUpperCase()] || 0);
-              });
-            }
-          });
+        if (vLog) {
+          // Nếu v_logs là Object (theo Interface thầy gửi)
+          if (vLog.v_logs && typeof vLog.v_logs === 'object') {
+            Object.values(vLog.v_logs).forEach((codes: any) => {
+              if (Array.isArray(codes)) {
+                codes.forEach(c => {
+                  const pts = scoreMap[String(c).trim().toUpperCase()] || 0;
+                  totalScore -= pts;
+                });
+              }
+            });
+          } 
+          // Dự phòng: Nếu vLog chính là mảng mã lỗi (phòng trường hợp cấu trúc phẳng)
+          else if (Array.isArray(vLog.codes)) {
+            vLog.codes.forEach((c: any) => {
+              totalScore -= (scoreMap[String(c).trim().toUpperCase()] || 0);
+            });
+          }
         }
-        // TÍNH ĐIỂM THƯỞNG (t_logs tương tự)
+
+        // 2. TÍNH ĐIỂM THƯỞNG
         const rLog = state.rewardLogs?.find((l: any) => String(l.idhs).trim() === sId);
-        if (rLog && rLog.t_logs) {
-          Object.values(rLog.t_logs).forEach((codes: any) => {
-            if (Array.isArray(codes)) {
-              codes.forEach(c => {
-                totalScore += (scoreMap[String(c).trim().toUpperCase()] || 0);
-              });
-            }
-          });
+        if (rLog) {
+          if (rLog.t_logs && typeof rLog.t_logs === 'object') {
+            Object.values(rLog.t_logs).forEach((codes: any) => {
+              if (Array.isArray(codes)) {
+                codes.forEach(c => {
+                  totalScore += (scoreMap[String(c).trim().toUpperCase()] || 0);
+                });
+              }
+            });
+          } else if (Array.isArray(rLog.codes)) {
+            rLog.codes.forEach((c: any) => {
+              totalScore += (scoreMap[String(c).trim().toUpperCase()] || 0);
+            });
+          }
         }
-      } else if (mode === 'semester') {
-        totalScore = 0;
+      }
+      return { ...student, totalScore, autoRank: 'Không XL' };
+    });
         const sRow = state.weeklyScores?.find((r: any) => String(r.idhs).trim() === sId);
         if (sRow && sRow.weeks) {
           for (let w = range.from; w <= range.to; w++) {
