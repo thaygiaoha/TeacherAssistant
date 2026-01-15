@@ -20,7 +20,7 @@ export const AttendanceManager = ({ state }: any) => {
       .map((s: any) => {
         const currentStatus = attendance[s.idbgd];
         // Chỉ xử lý nếu trạng thái là P hoặc KP
-        if (currentStatus === 'P' || currentStatus === 'K') {
+        if (currentStatus === 'P' || currentStatus === 'KP') {
           return {
             stt: s.stt,
             idbgd: s.idbgd,
@@ -86,7 +86,7 @@ export const AttendanceManager = ({ state }: any) => {
           onClick={prepareAttendance}
           className="bg-indigo-600 text-white px-8 py-4 rounded-2xl font-black flex items-center gap-2 hover:bg-slate-900 transition-all shadow-lg text-xs uppercase tracking-widest"
         >
-          <Send size={18}/> Tiếp tục ({state.students.filter((s:any) => attendance[s.idbgd] === 'P' || attendance[s.idbgd] === 'K').length})
+          <Send size={18}/> Tiếp tục ({state.students.filter((s:any) => attendance[s.idbgd] === 'P' || attendance[s.idbgd] === 'KP').length})
         </button>
       </div>
 
