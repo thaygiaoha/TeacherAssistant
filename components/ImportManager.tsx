@@ -106,7 +106,8 @@ export const ImportManager = ({ state, setState }: any) => {
           phoneNumber: String(r.phoneNumber || ''),
           accommodation: r.accommodation || '',
           cccd: String(r.cccd || ''),
-          idhs: String(r.idhs || '')
+          idhs: String(r.idhs || ''),
+          idbgd: String(r.idbgd || '')
         }));
 
         const ntSheet = wb.Sheets['nguoithan'];
