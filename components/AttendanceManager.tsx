@@ -27,7 +27,7 @@ export const AttendanceManager = ({ state }: any) => {
             name: s.name,
             class: s.class, // Thêm lớp để gửi lên cột B
             date: s.date,   // Ngày sinh để gửi lên cột E
-            type: currentStatus, // P hoặc K (Gửi lên cột J)
+            type: currentStatus === 'KP' ? 'K' : currentStatus,
             dd: String(today.getDate()).padStart(2, '0'),
             mm: String(today.getMonth() + 1).padStart(2, '0'),
             yyyy: String(today.getFullYear()),
