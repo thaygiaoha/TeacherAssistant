@@ -11,6 +11,7 @@ export interface Student {
   accommodation: string;
   cccd: string;
   idhs: string;
+  idbgd: string;
   avatarUrl?: string;
 }
 
