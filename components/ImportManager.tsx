@@ -60,6 +60,7 @@ export const ImportManager = ({ state, setState }: any) => {
           stt: manualStt ? parseInt(manualStt) : prev.students.length + 1,
           name: manualName,
           idhs: manualIdhs,
+          idbgd: manualIdbgd,
           class: '', date: '', gender: 'Nam', phoneNumber: '', accommodation: '', cccd: ''
         };
         if (manualStt) {
