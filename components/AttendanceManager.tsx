@@ -20,7 +20,7 @@ export const AttendanceManager = ({ state }: any) => {
       .map((s: any) => {
         const currentStatus = attendance[s.idbgd];
         // Chỉ xử lý nếu trạng thái là P hoặc KP
-        if (currentStatus === 'P' || currentStatus === 'KP') {
+        if (currentStatus === 'P' || currentStatus === 'K') {
           return {
             stt: s.stt,
             idbgd: s.idbgd,
