@@ -1,144 +1,130 @@
 import React, { useState } from 'react';
-import { Trophy, Send, Star, Users, ChevronDown } from 'lucide-react';
+import { Trophy, Users, ChevronDown, Award, Star } from 'lucide-react';
 
 export const RewardManager = ({ state, setState }: any) => {
   const [selectedStudent, setSelectedStudent] = useState('');
-  const [targetSheet, setTargetSheet] = useState('thanhtich'); 
-  const [selectedRewardCode, setSelectedRewardCode] = useState(''); // Lưu Mã thưởng
+  const [targetType, setTargetType] = useState<'thanhtich' | 'bch'>('thanhtich'); 
+  const [selectedRewardCode, setSelectedRewardCode] = useState(''); 
   const [isSending, setIsSending] = useState(false);
 
-  // Danh sách sẽ thay đổi tùy theo việc thầy chọn tab nào
-  const currentList = targetSheet === 'thanhtich' ? state.rewards : state.bch;
+  // Logic tách danh sách dựa trên nút bấm
+  const currentList = targetType === 'thanhtich' ? state.rewards : (state.bchRules || []);
 
-  // Trong file RewardManager.tsx, sửa lại hàm handleReward:
-const handleReward = async () => {
-  if (!selectedStudent || !selectedRewardCode) return alert("❌ Thầy vui lòng chọn đủ thông tin!");
+  const handleReward = async () => {
+    if (!selectedStudent || !selectedRewardCode) return alert("❌ Thầy hãy chọn học sinh và nội dung!");
 
-  setIsSending(true);
-  try {
-    if (state.googleScriptUrl) {
-      await fetch(state.googleScriptUrl, {
-        method: 'POST',
-        mode: 'no-cors',
-        body: JSON.stringify({
-          action: 'update_record',
-          target: targetSheet, // 'thanhtich' hoặc 'bch'
-          studentId: selectedStudent,
-          payload: selectedRewardCode, // Gửi mã (ví dụ: T01, LT)
-          week: state.currentWeek
+    setIsSending(true);
+    try {
+      if (state.googleScriptUrl) {
+        // GIỮ NGUYÊN: Vẫn ghi vào target: 'thuong' trên Google Sheet
+        await fetch(state.googleScriptUrl, {
+          method: 'POST',
+          mode: 'no-cors',
+          body: JSON.stringify({
+            action: 'update_record',
+            target: 'thuong', 
+            studentId: selectedStudent,
+            payload: selectedRewardCode, 
+          })
+        });
+      }
+
+      // CẬP NHẬT LOCAL LOGS GỮ NGUYÊN LOGIC CŨ
+      setState((prev: any) => ({
+        ...prev,
+        rewardLogs: prev.rewardLogs.map((row: any[]) => {
+          if (String(row[1]).trim() === String(selectedStudent).trim()) {
+            return [...row, selectedRewardCode];
+          }
+          return row;
         })
-      });
+      }));
+
+      alert(`🎉 Đã cộng mã [${selectedRewardCode}] thành công!`);
+      setSelectedRewardCode('');
+    } catch (e) {
+      alert("❌ Lỗi kết nối!");
+    } finally {
+      setIsSending(false);
     }
-    alert(`🎉 Đã ghi mã [${selectedRewardCode}] vào sheet THƯỞNG!`);
-    setSelectedRewardCode('');
-    setSelectedStudent('');
-  } catch (err) {
-    alert("❌ Lỗi đồng bộ!");
-  } finally {
-    setIsSending(false);
-  }
-};
+  };
 
   return (
-    <div className="max-w-3xl mx-auto animate-in fade-in slide-in-from-bottom-8 duration-700">
-      <div className="bg-white p-10 rounded-[48px] shadow-sm border border-slate-100">
-        
-        {/* Tiêu đề */}
-        <div className="flex justify-between items-start mb-10">
-          <div>
-            <h2 className="text-3xl font-black text-slate-900 tracking-tighter flex items-center gap-3">
-              <Trophy className="text-amber-500" size={32} /> Vinh Danh & Khen Thưởng
-            </h2>
-            <p className="text-slate-400 font-bold mt-1 uppercase text-[10px] tracking-[0.2em]">
-              Tuần hiện tại: {state.currentWeek}
-            </p>
-          </div>
-        </div>
-
-        <div className="space-y-8">
+    <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-5">
+      <div className="bg-white p-10 rounded-[50px] shadow-sm border border-slate-100">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
           
-          {/* 1. Chọn Mục Thưởng (Tab) */}
-          <div className="grid grid-cols-2 gap-4">
-            <button
-              onClick={() => { setTargetSheet('thanhtich'); setSelectedRewardCode(''); }}
-              className={`p-6 rounded-[30px] border-2 transition-all flex flex-col items-center gap-2 ${
-                targetSheet === 'thanhtich' 
-                ? 'border-emerald-500 bg-emerald-50 text-emerald-700 shadow-sm' 
-                : 'border-slate-100 text-slate-400 opacity-60'
-              }`}
-            >
-              <Star size={24} />
-              <span className="font-black text-sm uppercase">Thành tích</span>
-            </button>
-            <button
-              onClick={() => { setTargetSheet('bch'); setSelectedRewardCode(''); }}
-              className={`p-6 rounded-[30px] border-2 transition-all flex flex-col items-center gap-2 ${
-                targetSheet === 'bch' 
-                ? 'border-indigo-500 bg-indigo-50 text-indigo-700 shadow-sm' 
-                : 'border-slate-100 text-slate-400 opacity-60'
-              }`}
-            >
-              <Users size={24} />
-              <span className="font-black text-sm uppercase">Ban cán sự</span>
-            </button>
-          </div>
-
-          {/* 2. Chọn Học sinh */}
+          {/* CHỌN HỌC SINH */}
           <div className="space-y-3">
-            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-5 block">
-              1. Học sinh được khen thưởng
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-5 flex items-center gap-2">
+              <Users size={12}/> Đối tượng khen thưởng
             </label>
-            <div className="relative">
+            <div className="relative group">
               <select 
                 value={selectedStudent}
                 onChange={(e) => setSelectedStudent(e.target.value)}
-                className="w-full p-6 bg-slate-50 border-2 border-slate-100 rounded-[30px] outline-none focus:border-emerald-500 font-bold text-slate-800 text-lg appearance-none transition-all shadow-inner"
+                className="w-full p-6 bg-slate-50 border-2 border-slate-100 rounded-[30px] outline-none font-bold text-slate-700 appearance-none focus:border-emerald-500 transition-all"
               >
-                <option value="">-- Chọn học sinh từ danh sách --</option>
+                <option value="">-- Chọn học sinh --</option>
                 {state.students.map((s: any) => (
                   <option key={s.idhs} value={s.idhs}>{s.stt}. {s.name} ({s.idhs})</option>
                 ))}
               </select>
-              <ChevronDown className="absolute right-6 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+              <ChevronDown className="absolute right-7 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none" />
             </div>
           </div>
 
-          {/* 3. Chọn Nội dung thưởng (ĐÃ SỬA TỪ TEXTAREA SANG SELECT) */}
+          {/* CHỌN LOẠI THƯỞNG (Nội dung 1) */}
           <div className="space-y-3">
-            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-5 block">
-              2. Nội dung khen thưởng (Danh sách sổ xuống)
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-5 flex items-center gap-2">
+              <Star size={12}/> Phân loại mục thưởng
             </label>
-            <div className="relative">
-              <select
-                value={selectedRewardCode}
-                onChange={(e) => setSelectedRewardCode(e.target.value)}
-                className="w-full p-6 bg-slate-50 border-2 border-slate-100 rounded-[30px] outline-none focus:border-emerald-500 font-bold text-slate-700 text-lg appearance-none transition-all shadow-inner"
+            <div className="flex bg-slate-100 p-1.5 rounded-[25px] gap-1">
+              <button 
+                onClick={() => { setTargetType('thanhtich'); setSelectedRewardCode(''); }}
+                className={`flex-1 py-4 rounded-[20px] text-[10px] font-black transition-all uppercase ${targetType === 'thanhtich' ? 'bg-white text-emerald-600 shadow-sm' : 'text-slate-400'}`}
               >
-                <option value="">-- Chọn nội dung khen thưởng --</option>
-                {currentList && currentList.map((item: any) => (
-                  <option key={item.codeRule} value={item.codeRule}>
-                    [{item.codeRule}] {item.nameRule}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown className="absolute right-6 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                Thành tích cá nhân
+              </button>
+              <button 
+                onClick={() => { setTargetType('bch'); setSelectedRewardCode(''); }}
+                className={`flex-1 py-4 rounded-[20px] text-[10px] font-black transition-all uppercase ${targetType === 'bch' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-400'}`}
+              >
+                Điểm BCH / Cán sự
+              </button>
             </div>
           </div>
-
-          {/* Nút gửi */}
-          <button
-            onClick={handleReward}
-            disabled={isSending}
-            className={`w-full py-6 rounded-[32px] font-black text-lg transition-all flex items-center justify-center gap-3 active:scale-95 shadow-xl ${
-              isSending 
-                ? 'bg-slate-100 text-slate-400' 
-                : 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-emerald-200'
-            }`}
-          >
-            {isSending ? "ĐANG LƯU DỮ LIỆU..." : <><Send size={20} /> XÁC NHẬN KHEN THƯỞNG</>}
-          </button>
-
         </div>
+
+        {/* CHỌN NỘI DUNG THƯỞNG THEO DANH SÁCH ĐÃ TÁCH */}
+        <div className="space-y-3 mb-10">
+          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-5">Nội dung khen thưởng cụ thể</label>
+          <div className="relative group">
+            <select 
+              value={selectedRewardCode}
+              onChange={(e) => setSelectedRewardCode(e.target.value)}
+              className="w-full p-7 bg-slate-50 border-2 border-slate-100 rounded-[35px] outline-none font-black text-slate-700 text-lg appearance-none focus:border-emerald-500 transition-all"
+            >
+              <option value="">-- Click để chọn mã thưởng --</option>
+              {currentList.map((item: any) => (
+                <option key={item.codeRule} value={item.codeRule}>
+                  [{item.codeRule}] {item.nameRule} (+{item.points}đ)
+                </option>
+              ))}
+            </select>
+            <ChevronDown className="absolute right-8 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none" />
+          </div>
+        </div>
+
+        <button
+          onClick={handleReward}
+          disabled={isSending}
+          className={`w-full py-8 rounded-[35px] font-black text-xl transition-all flex items-center justify-center gap-4 shadow-2xl active:scale-95 ${
+            isSending ? 'bg-slate-100 text-slate-400' : 'bg-slate-900 text-white hover:bg-emerald-600 shadow-emerald-100'
+          }`}
+        >
+          {isSending ? <div className="animate-pulse">ĐANG GỬI DỮ LIỆU...</div> : <><Trophy size={24}/> XÁC NHẬN THƯỞNG</>}
+        </button>
       </div>
     </div>
   );

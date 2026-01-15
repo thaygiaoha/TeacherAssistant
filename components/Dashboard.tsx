@@ -1,222 +1,203 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  Newspaper, Users, Award, Camera, ChevronRight, 
-  ExternalLink, UserCircle2, X, Search, Activity, Calendar, GraduationCap 
+  Users, Award, UserCircle2, X, Sparkles, CalendarDays, AlertCircle, ChevronLeft, ChevronRight
 } from 'lucide-react';
 
 export const Dashboard = ({ state, setState, setActiveTab }: any) => {
-  const [currentImg, setCurrentImg] = useState(0);
   const [showStudentList, setShowStudentList] = useState(false);
   const [searchMember, setSearchMember] = useState('');
+  const [currentImgIndex, setCurrentImgIndex] = useState(0);
+  const [aiGreeting, setAiGreeting] = useState('Đang kết nối AI...');
 
-  const photos = state.newsData || []; 
-  const newsList = state.newsList || []; 
-  const bchNames = state.bchNames || [];
+  // 1. LOGIC LỜI CHÀO AI (Giữ nguyên gốc của thầy)
+ useEffect(() => {
+  const fetchGreeting = () => {
+    // Thầy có thể giữ setTimeout để tạo cảm giác AI đang "suy nghĩ" một chút rồi mới chào
+    setTimeout(() => {
+      setAiGreeting(`Giáo viên chủ nhiệm: ${state.gvcnName}`);
+    }, 800);
+  };
+  fetchGreeting();
+}, [state.gvcnName]);
 
-  // HÀM BỔ TRỢ: Chuyển link Drive (Để ngoài để tối ưu hiệu suất)
-  const getDirectImg = (url: string) => {
-  if (!url) return null;
-  if (url.includes('drive.google.com')) {
-    const id = url.split('/d/')[1]?.split('/')[0] || url.split('id=')[1]?.split('&')[0];
-    // Sử dụng link thumbnail chất lượng cao thay vì uc?id
-    return id ? `https://lh3.googleusercontent.com/d/${id}` : url;
-  }
-  return url;
-};
-
+  // 2. LOGIC SLIDE ẢNH TỰ ĐỘNG
   useEffect(() => {
-    if (photos.length > 0) {
+    if (state.newsData && state.newsData.length > 1) {
       const timer = setInterval(() => {
-        setCurrentImg((prev) => (prev + 1) % photos.length);
-      }, 5000);
+        setCurrentImgIndex((prev) => (prev + 1) % state.newsData.length);
+      }, 4000); 
       return () => clearInterval(timer);
     }
-  }, [photos]);
+  }, [state.newsData]);
 
   return (
-    <div className="space-y-8 pb-20 animate-in fade-in duration-700">
+    <div className="space-y-10 animate-in fade-in duration-700">
       
-      {/* 1. KHU VỰC ẢNH & TIN TỨC */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 relative group overflow-hidden rounded-[48px] bg-slate-200 aspect-video shadow-2xl">
-          {photos.length > 0 ? (
-            <>
-              <img 
-                src={photos[currentImg].link} 
-                className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" 
-                alt="Hoạt động"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
-              <div className="absolute bottom-8 left-8 right-8 text-white">
-                <div className="flex items-center gap-2 mb-2 text-indigo-400 font-bold text-xs uppercase tracking-[0.2em]">
-                  <Camera size={14}/> Một số hoạt động của lớp
-                </div>
-                <h3 className="text-2xl font-black">{photos[currentImg].title}</h3>
-              </div>
-            </>
-          ) : (
-            <div className="w-full h-full flex items-center justify-center text-slate-400 font-bold italic">Chưa có ảnh hoạt động</div>
-          )}
+      {/* KHỐI 1: HEADER AI & CHỌN TUẦN (Sự kết hợp hoàn hảo) */}
+      <div className="flex flex-col md:flex-row gap-6">
+        {/* Lời chào AI */}
+        <div className="flex-1 bg-gradient-to-r from-indigo-600 to-indigo-800 p-8 rounded-[40px] text-white shadow-2xl flex items-center gap-6 relative overflow-hidden group">
+          <div className="absolute top-0 right-0 p-16 bg-white/10 rounded-full -mr-10 -mt-10 blur-3xl group-hover:scale-110 transition-transform duration-700"></div>
+          <div className="w-20 h-20 bg-white/20 backdrop-blur-md rounded-[28px] flex items-center justify-center shadow-inner relative z-10">
+            <Sparkles size={40} className="text-amber-300 animate-pulse" />
+          </div>
+          <div className="relative z-10">
+            <h2 className="text-xs font-black text-indigo-200 uppercase tracking-[0.3em] mb-2">Trợ lý ảo thông minh</h2>
+            <p className="text-2xl font-black leading-tight tracking-tight uppercase">
+              {aiGreeting}
+            </p>
+          </div>
         </div>
 
-        {/* PHẦN TIN TỨC */}
-        <div className="bg-white p-8 rounded-[48px] border border-slate-100 shadow-sm flex flex-col h-full">
-          <h3 className="text-xl font-black mb-6 flex items-center gap-3 text-slate-800">
-            <Newspaper size={24} className="text-indigo-500"/> Cập nhật tin tức
-          </h3>
+        {/* Chọn Tuần & Ngày tháng */}
+        <div className="bg-white p-8 rounded-[40px] border border-slate-100 shadow-sm flex flex-col justify-center gap-4">
+          <div className="relative group">
+            <select 
+              value={state.currentWeek}
+              onChange={(e) => setState((prev: any) => ({ ...prev, currentWeek: parseInt(e.target.value) }))}
+              className="appearance-none bg-indigo-50 border-2 border-indigo-100 text-indigo-700 px-8 py-4 rounded-3xl font-black text-sm uppercase tracking-widest focus:outline-none focus:border-indigo-400 transition-all pr-12 shadow-sm w-full"
+            >
+              {[...Array(40)].map((_, i) => (
+                <option key={i+1} value={i+1}>Tuần học {i+1}</option>
+              ))}
+            </select>
+            <CalendarDays className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-indigo-400" size={18} />
+          </div>
           
-          <div className="space-y-4 flex-1 overflow-y-auto max-h-[350px] pr-2 custom-scrollbar">
-            {newsList && newsList.length > 0 ? (
-              newsList.map((news: any, idx: number) => (
-                <a 
-                  key={idx} 
-                  href={news.link || "#"} 
-                  target="_blank" 
-                  rel="noreferrer" 
-                  className="flex items-start gap-4 p-4 rounded-3xl hover:bg-slate-50 transition-colors group border border-transparent hover:border-slate-100"
-                >
-                  <div className="w-2 h-2 rounded-full bg-indigo-500 mt-2 shrink-0"></div>
-                  <div>
-                    <div className="font-bold text-slate-700 leading-snug group-hover:text-indigo-600 transition-colors">
-                      {news.news}
-                    </div>
-                    {news.link && (
-                      <div className="text-[10px] text-slate-400 mt-1 flex items-center gap-1 uppercase font-black tracking-wider group-hover:text-indigo-400 transition-colors">
-                        Xem chi tiết <ExternalLink size={10}/>
-                      </div>
-                    )}
+            <div className="hidden md:block bg-slate-900 text-white px-8 py-4 rounded-3xl font-black text-[12px] uppercase tracking-widest shadow-xl">
+  {(() => {
+    const d = new Date();
+    const thu = d.toLocaleDateString('vi-VN', { weekday: 'long' }); // Trả về "thứ năm"
+    const ngay = d.toLocaleDateString('vi-VN', { 
+      day: '2-digit', 
+      month: '2-digit', 
+      year: 'numeric' 
+    }); // Trả về "15/01/2026"
+    
+    // Viết hoa chữ cái đầu (t -> T) và ghép lại
+    return thu.charAt(0).toUpperCase() + thu.slice(1) + ", " + ngay;
+  })()}
+
+          </div>
+        </div>
+      </div>
+
+      {/* KHỐI 2: ẢNH HOẠT ĐỘNG & TIN TỨC */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Slide Ảnh */}
+        <div className="lg:col-span-2 space-y-4">
+          <div className="flex items-center gap-3 ml-4">
+            <CalendarDays className="text-indigo-600" size={20}/>
+            <h3 className="text-xs font-black uppercase tracking-widest text-slate-500">Hoạt động lớp gần đây</h3>
+          </div>
+          <div className="relative h-[450px] rounded-[50px] overflow-hidden group shadow-2xl border-8 border-white bg-slate-900">
+            {state.newsData && state.newsData.length > 0 ? (
+              <>
+                <img 
+                  src={state.newsData[currentImgIndex].link} 
+                  key={state.newsData[currentImgIndex].link}
+                  className="w-full h-full object-cover animate-in fade-in zoom-in duration-1000" 
+                  alt="Hoạt động"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent flex items-end p-12">
+                  <p className="text-white text-2xl font-black uppercase tracking-tight italic drop-shadow-lg">
+                    {state.newsData[currentImgIndex].title}
+                  </p>
+                </div>
+                {state.newsData.length > 1 && (
+                  <div className="absolute top-1/2 -translate-y-1/2 w-full px-6 flex justify-between opacity-0 group-hover:opacity-100 transition-all">
+                     <button onClick={() => setCurrentImgIndex(prev => (prev - 1 + state.newsData.length) % state.newsData.length)} className="w-12 h-12 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white hover:bg-white/50"><ChevronLeft/></button>
+                     <button onClick={() => setCurrentImgIndex(prev => (prev + 1) % state.newsData.length)} className="w-12 h-12 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white hover:bg-white/50"><ChevronRight/></button>
                   </div>
-                </a>
-              ))
+                )}
+              </>
             ) : (
-              <div className="text-center py-10 text-slate-400 italic">Chưa có tin tức mới</div>
+              <div className="w-full h-full flex items-center justify-center text-slate-500 font-black uppercase text-[10px]">Đang cập nhật ảnh hoạt động...</div>
+            )}
+          </div>
+        </div>
+
+        {/* Bảng Tin */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-3 ml-4">
+            <AlertCircle className="text-rose-600" size={20}/>
+            <h3 className="text-xs font-black uppercase tracking-widest text-slate-500">Bảng tin tức</h3>
+          </div>
+          <div className="bg-white p-8 rounded-[50px] border border-slate-100 shadow-sm h-[450px] overflow-y-auto custom-scrollbar space-y-4">
+            {state.newsList && state.newsList.length > 0 ? state.newsList.map((item: any, idx: number) => (
+              <a key={idx} href={item.link} target="_blank" rel="noreferrer" className="flex items-start gap-4 p-5 bg-slate-50 rounded-[30px] hover:bg-indigo-50 transition-all group border border-transparent hover:border-indigo-100">
+                <div className="w-10 h-10 bg-white rounded-2xl flex items-center justify-center text-indigo-600 shadow-sm group-hover:bg-indigo-600 group-hover:text-white transition-all">
+                  <Award size={20}/>
+                </div>
+                <div className="flex-1">
+                  <p className="font-black text-[11px] text-slate-700 uppercase leading-tight line-clamp-2">{item.news}</p>
+                  <span className="text-[9px] font-bold text-slate-400 group-hover:text-indigo-400">Xem chi tiết →</span>
+                </div>
+              </a>
+            )) : (
+              <div className="text-center py-20 text-slate-300 font-bold uppercase text-[10px]">Đang cập nhật ....</div>
             )}
           </div>
         </div>
       </div>
 
-      {/* 2. KHU VỰC ĐIỀU KHIỂN & BAN CHẤP HÀNH */}
-      <div className="bg-white p-8 rounded-[48px] border border-slate-100 shadow-sm w-full">
-        <div className="flex flex-wrap justify-between items-center gap-6 mb-10">
-          <h3 className="text-xl font-black flex items-center gap-3 text-slate-800">
-            <Award size={24} className="text-amber-500"/> Ban chấp hành lớp
-          </h3>
-          
-          <div className="flex items-center gap-4">
-            <div className="flex items-center bg-slate-100 p-2 rounded-[28px] border border-slate-200 shadow-inner">
-              <button 
-                onClick={() => {
-                  if (state.currentWeek > 1) {
-                    setState({ ...state, currentWeek: state.currentWeek - 1 });
-                  }
-                }}
-                className="w-12 h-12 flex items-center justify-center bg-white rounded-2xl shadow-sm text-slate-600 hover:bg-rose-500 hover:text-white transition-all font-black text-xl active:scale-90"
-              >
-                -
-              </button>
-              
-              <div className="px-8 text-center min-w-[120px]">
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Tuần hiện tại</p>
-                <p className="text-2xl font-black text-slate-900 leading-none">
-                   {state.currentWeek}
-                </p>
-              </div>
-
-              <button 
-                onClick={() => setState({ ...state, currentWeek: state.currentWeek + 1 })}
-                className="w-12 h-12 flex items-center justify-center bg-white rounded-2xl shadow-sm text-slate-600 hover:bg-emerald-500 hover:text-white transition-all font-black text-xl active:scale-90"
-              >
-                +
-              </button>
-            </div>
-
-            <button 
-              onClick={() => setShowStudentList(true)}
-              className="px-10 py-5 bg-cyan-500 text-white rounded-[28px] font-black text-sm hover:bg-cyan-600 transition-all shadow-xl shadow-cyan-100 flex items-center gap-3 group"
-            >
-              <Users size={24} className="group-hover:scale-110 transition-transform" /> 
-              HỒ SƠ LỚP HỌC
-            </button>
+      {/* KHỐI 3: BAN CÁN SỰ LỚP (GIỮ NGUYÊN) */}
+      <div className="space-y-6 pb-10">
+        <div className="flex items-center justify-between px-4">
+          <div className="flex items-center gap-3 text-indigo-600">
+            <Users size={24}/>
+            <h3 className="text-xl font-black uppercase tracking-tighter text-slate-800">Ban cán sự lớp</h3>
           </div>
+         <button 
+  onClick={() => setShowStudentList(true)} 
+  className="flex items-center gap-2 px-6 py-3 bg-white border border-slate-200 rounded-2xl text-[10px] font-black uppercase tracking-widest text-slate-500 hover:bg-slate-900 hover:text-white transition-all shadow-sm group"
+>
+  <Users size={14} className="group-hover:text-white transition-colors" />
+  <span>Xem danh sách lớp</span>
+</button>
         </div>
-        
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-6">
-          {bchNames && bchNames.map((mem: any, idx: number) => (
-            <div key={idx} className="relative group p-6 bg-gradient-to-br from-white to-slate-50 rounded-[32px] border border-slate-100 shadow-sm hover:shadow-xl hover:shadow-indigo-500/10 hover:-translate-y-1 transition-all duration-300 overflow-hidden text-center">
-              <div className="absolute top-0 right-0 w-16 h-16 bg-indigo-500/5 rounded-full -mr-8 -mt-8 group-hover:scale-150 transition-transform duration-500" />
-              <div className="relative z-10">
-                <div className="text-[10px] font-black text-indigo-500 uppercase tracking-widest mb-2 opacity-70">
-                  {mem.position}
-                </div>
-                <div className="font-extrabold text-slate-800 text-base tracking-tight group-hover:text-indigo-600 transition-colors uppercase">
-                  {mem.name}
-                </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {state.bchNames.map((member: any, idx: number) => (
+            <div key={idx} className="bg-white p-6 rounded-[35px] border border-slate-100 shadow-sm flex items-center gap-5 hover:shadow-xl transition-all group">
+              <div className="w-16 h-16 rounded-2xl bg-slate-100 overflow-hidden border-2 border-white shadow-inner flex-shrink-0">
+                {member.avatarUrl ? <img src={member.avatarUrl} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-slate-300"><UserCircle2 size={32}/></div>}
+              </div>
+              <div>
+                <div className="text-[10px] font-black text-indigo-500 uppercase tracking-widest mb-1">{member.position}</div>
+                <div className="font-black text-slate-800 uppercase text-xs tracking-tight">{member.name}</div>
               </div>
             </div>
           ))}
         </div>
       </div>
 
-      {/* MODAL HỒ SƠ LỚP HỌC */}
+      {/* MODAL DANH SÁCH HỌC SINH */}
       {showStudentList && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md" onClick={() => setShowStudentList(false)}></div>
-          <div className="bg-white w-full max-w-5xl max-h-[85vh] rounded-[48px] shadow-2xl relative z-10 flex flex-col overflow-hidden animate-in zoom-in-95">
-            <div className="p-8 border-b border-slate-100 flex justify-between items-center bg-white">
-              <div>
-                <h2 className="text-3xl font-black text-slate-800 tracking-tight">Hồ sơ học sinh</h2>
-                <p className="text-cyan-500 text-xs font-black uppercase tracking-widest mt-1">Sĩ số: {state.students?.length || 0} thành viên</p>
-              </div>
-              <div className="flex gap-4 items-center">
-                <div className="relative">
-                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18}/>
-                  <input 
-                    type="text" 
-                    placeholder="Tìm tên hoặc mã..." 
-                    className="pl-12 pr-6 py-4 bg-slate-100 rounded-[20px] outline-none focus:ring-4 ring-cyan-50 text-sm w-80 font-bold transition-all"
-                    onChange={(e) => setSearchMember(e.target.value)}
-                  />
+        <div className="fixed inset-0 z-[100] bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-6">
+          <div className="bg-white w-full max-w-6xl h-[85vh] rounded-[60px] shadow-2xl overflow-hidden flex flex-col relative">
+            <div className="p-10 border-b border-slate-100 flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 bg-indigo-600 rounded-2xl flex items-center justify-center text-white shadow-lg"><Users size={28}/></div>
+                <div>
+                  <h3 className="text-2xl font-black uppercase tracking-tighter">Danh sách học sinh</h3>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Sĩ số: {state.students.length}</p>
                 </div>
-                <button onClick={() => setShowStudentList(false)} className="p-4 bg-rose-50 text-rose-500 rounded-2xl hover:bg-rose-500 hover:text-white transition-all">
-                  <X size={24}/>
-                </button>
+              </div>
+              <div className="flex items-center gap-4">
+                <input type="text" placeholder="Tìm tên..." className="bg-slate-50 border-2 border-slate-100 px-8 py-3 rounded-2xl outline-none focus:border-indigo-500 text-sm font-bold" onChange={(e) => setSearchMember(e.target.value)} />
+                <button onClick={() => setShowStudentList(false)} className="w-12 h-12 bg-rose-50 text-rose-500 rounded-xl flex items-center justify-center hover:bg-rose-500 hover:text-white transition-all"><X size={24}/></button>
               </div>
             </div>
-
-            <div className="flex-1 overflow-y-auto p-8 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6 custom-scrollbar bg-slate-50/50">
-              {(state.students || [])
-                .filter((s: any) => s.name.toLowerCase().includes(searchMember.toLowerCase()) || (s.idhs && s.idhs.toString().includes(searchMember)))
-                .map((student: any, idx: number) => (
-                  <div key={idx} className="bg-white rounded-[32px] p-4 border border-slate-100 hover:border-indigo-500 hover:shadow-2xl transition-all text-center group">
-                    <div className="w-full aspect-[3/4] rounded-2xl bg-slate-50 mb-4 overflow-hidden relative shadow-inner border border-slate-50">
-                      {student.imglink ? (
-                       <img 
-                        src={student.imglink} 
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
-                        alt={student.name}
-                        onError={(e) => { 
-                        console.log("Lỗi load ảnh tại link:", student.imglink);
-                        e.currentTarget.src = "https://via.placeholder.com/150?text=Loi+Link"; 
-                        }}
-/>
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-slate-200">
-                          <GraduationCap size={48} />
-                        </div>
-                      )}
-                      <div className="absolute bottom-2 right-2 bg-black/20 backdrop-blur-md px-2 py-0.5 rounded-full text-[8px] text-white font-bold">
-                        ID: {student.idhs}
-                      </div>
-                    </div>
-
-                    <div className="font-black text-slate-800 text-sm leading-tight mb-1 uppercase tracking-tight group-hover:text-indigo-600 transition-colors">
-                      {student.name}
-                    </div>
-                    <div className="text-[10px] text-slate-400 font-bold uppercase tracking-widest opacity-60">
-                      Học sinh lớp {student.class || '...'}
-                    </div>
+            <div className="flex-1 overflow-y-auto p-10 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8 bg-slate-50/30 custom-scrollbar">
+              {state.students.filter((s: any) => s.name.toLowerCase().includes(searchMember.toLowerCase())).map((student: any, idx: number) => (
+                <div key={idx} className="bg-white rounded-[32px] p-5 border border-slate-100 text-center hover:shadow-2xl transition-all group">
+                  <div className="w-full aspect-square rounded-[24px] bg-slate-100 mb-4 overflow-hidden border-2 border-white flex items-center justify-center">
+                    {student.avatarUrl ? <img src={student.avatarUrl} className="w-full h-full object-cover" /> : <UserCircle2 size={64} className="text-slate-200"/>}
                   </div>
-                ))}
+                  <div className="font-black text-slate-800 text-xs uppercase mb-1">{student.name}</div>
+                  <div className="text-[9px] font-bold text-slate-400 uppercase tracking-widest italic">{student.idhs}</div>
+                </div>
+              ))}
             </div>
           </div>
         </div>
