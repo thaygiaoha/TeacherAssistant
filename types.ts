@@ -1,6 +1,6 @@
 
 export type Gender = 'Nam' | 'Nữ';
-// danh sach
+
 export interface Student {
   stt: number;
   name: string;
@@ -11,9 +11,31 @@ export interface Student {
   accommodation: string;
   cccd: string;
   idhs: string;
-  imglink?: string;
+  avatarUrl?: string;
 }
-// người thân
+
+// Added missing ViolationRule interface
+export interface ViolationRule {
+  nameRule: string;
+  codeRule: string;
+  points: number;
+}
+
+// Added missing RewardRule interface
+export interface RewardRule {
+  nameBonus: string;
+  codeBonus: string;
+  points: number;
+}
+
+// Added missing BCHRule interface
+export interface BCHRule {
+  nameTitle: string;
+  codeTitle: string;
+  points: number;
+}
+
+// Added missing RelativeInfo interface
 export interface RelativeInfo {
   idhs: string;
   namefather: string;
@@ -26,53 +48,34 @@ export interface RelativeInfo {
   jobmother: string;
   hoancanh: string;
 }
-// bảng lỗi
-export interface ViolationRule {
-  nameRule: string;
-  codeRule: string;
-  points: number;
+
+export interface GradingThresholds {
+  tot: number;
+  kha: number;
+  dat: number;
+  chuaDat: number;
 }
-// thành tích
-export interface RewardRule {
-  nameBonus: string;
-  codeBonus: string;
-  points: number;
-}
-// ban chấp hành
-export interface BCHRule {
-  nameTitle: string;
-  codeTitle: string;
-  points: number;
-}
-// tuần
-export interface WeeklyScore {
+
+export interface ManualRank {
   idhs: string;
-  name: string;
-  weeks: { [key: string]: number };
-}
-// vi phậm
-export interface ViolationLog {
-  idhs: string;
-  name: string;
-  v_logs: { [key: string]: string[] };
-}
-// thưởng
-export interface RewardLog {
-  idhs: string;
-  name: string;
-  t_logs: { [key: string]: string[] };
+  rank: string;
 }
 
 export interface AppState {
+  gvcnName: string;
   students: Student[];
-  relatives: RelativeInfo[];
-  violations: ViolationRule[];
-  rewards: RewardRule[];
-  bch: BCHRule[];
-  weeklyScores: WeeklyScore[];
-  violationLogs: ViolationLog[];
-  rewardLogs: RewardLog[];
+  relatives: any[];
+  violations: any[];
+  rewards: any[];
+  bchRules: any[]; // <--- THÊM DÒNG NÀY VÀO TRONG AppState
+  bchNames: any[];
+  newsData: { title: string; link: string }[];
+  newsList: { news: string; link: string }[];
+  violationLogs: any[];
+  rewardLogs: any[];
   currentWeek: number;
   googleScriptUrl: string;
-  appPassword?: string; // Lấy từ ô F2 sheet xeploaihk
+  appPassword?: string;
+  gradingThresholds: GradingThresholds;
+  manualRanks: ManualRank[];
 }

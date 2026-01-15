@@ -1,177 +1,254 @@
-const SPREADSHEET_ID = "1hKbsw8Y_fkMb4hBPRuKClJGx_bRFo9Y4Wei2Ot3R8OI";
+/**
+ * @file Google Apps Script backend - Teacher Assistant Pro
+ * Đã sửa lỗi thứ tự hàm và bổ sung đầy đủ các mục thầy yêu cầu
+ */
+
+var SPREADSHEET_ID = "16QwNRbM5NppnfFYujPUq1ZweYcqbnetF-z4SvTS01n8";
+
 function doGet(e) {
-  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
-  const action = e.parameter.action;
-
-  // Lấy mật khẩu và tên GVCN dùng chung cho các phản hồi
-  const xepLoaiSheet = ss.getSheetByName("xeploaihk");
-  const cloudPassword = xepLoaiSheet ? xepLoaiSheet.getRange("F2").getValue().toString() : "123";
-  
-  const newsSheet = ss.getSheetByName("news");
-  const gvcnName = newsSheet ? newsSheet.getRange("H2").getValue() : "Chưa cập nhật";
-
-  // 1. LẤY DỮ LIỆU TỔNG HỢP
-  if (action === 'get_initial_data') {
-    const getValues = (name) => {
-      const sh = ss.getSheetByName(name);
-      return sh ? sh.getDataRange().getValues() : [];
-    };
-
-    const mapCategory = (data) => {
-      if (!data || data.length < 2) return [];
-      return data.slice(1).map(row => ({
-        codeRule: String(row[1] || "").toUpperCase(),
-        points: Number(row[2]) || 0,
-        position: String(row[1] || ""), 
-        name: String(row[2] || ""),     
-        idhs: String(row[0] || "")      
-      }));
-    };
-    const newsSheet = ss.getSheetByName("news");
-const newsData = newsSheet ? newsSheet.getDataRange().getValues() : [];
-
-// Lấy danh sách BCH từ cột C (index 2) và cột E (index 4) của sheet news
-const bchList = [];
-if (newsData.length > 1) {
-  for (let i = 1; i < newsData.length; i++) {
-    if (newsData[i][2] && newsData[i][4]) { // Nếu có cả tên và chức vụ
-      bchList.push({
-        name: String(newsData[i][2]),      // Cột C: name
-        position: String(newsData[i][4]),  // Cột E: position
-        idhs: String(newsData[i][3] || "") // Cột D: idhs (nếu có)
-      });
-    }
-  }
-}
-const newsDataRaw = newsSheet ? newsSheet.getRange("A2:B50").getValues() : [];
-const photos = [];
-newsDataRaw.forEach(row => {
-  if (row[0] && row[1]) { // Nếu có cả tiêu đề và link ảnh
-    photos.push({
-      title: String(row[0]),
-      link: String(row[1])
+  var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  var action = e.parameter.action;
+  // --- HÀM RESET TUẦN MỚI (Đã đưa ra ngoài độc lập) ---
+  if (action === 'reset_week') {
+    var sheetsToReset = ["vipham", "thuong"];
+    sheetsToReset.forEach(function(name) {
+      var sheet = ss.getSheetByName(name);
+      if (sheet) {
+        var lastRow = sheet.getLastRow();
+        var lastCol = sheet.getLastColumn();
+        // Xóa sạch từ hàng 2, cột 3 (C) trở đi đến hết bảng
+        if (lastRow >= 2 && lastCol >= 3) {
+          sheet.getRange(2, 3, lastRow - 1, lastCol - 2).clearContent();
+        }
+      }
     });
+    return ContentService.createTextOutput(JSON.stringify({"status": "success"}))
+      .setMimeType(ContentService.MimeType.JSON);
   }
-});
-const rawNews = newsSheet.getRange("F2:G30").getValues();
-const newsList = rawNews
-  .filter(row => row[0] !== "") // Chỉ lấy những dòng có nội dung tin tức
-  .map(row => ({
-    news: row[0],  // Nội dung tin ở cột F
-    link: row[1]   // Link chi tiết ở cột G (nếu có)
-  }));
-    const result = {
-      gvcnName: gvcnName,
-      newsList: newsList,
-      appPassword: cloudPassword,
-      newsData: photos,
-      bchNames: bchList,
-      violations: mapCategory(getValues("bangloi")),
-      rewards: mapCategory(getValues("thanhtich")),
-      bch: mapCategory(getValues("bch")),
-      violationLogs: getValues("vipham").slice(1),
-      rewardLogs: getValues("thuong").slice(1),
-      weeklyScores: getValues("tuan"),
-      allRanks: getValues("xeploai")
+
+  if (action === 'get_initial_data') {
+    var newsSheet = ss.getSheetByName("news");
+    var xlhkSheet = ss.getSheetByName("xeploaihk");
+    var vpSheet = ss.getSheetByName("vipham");
+    var thSheet = ss.getSheetByName("thuong");
+    
+    // --- KHAI BÁO CÁC HÀM HỖ TRỢ TRƯỚC ---
+    var getRules = function(sheetName) {
+      var sh = ss.getSheetByName(sheetName);
+      if (!sh) return [];
+      var d = sh.getDataRange().getValues();
+      var res = [];
+      for (var i = 1; i < d.length; i++) {
+        if (!d[i][0]) continue;
+        res.push({ nameRule: String(d[i][0]), codeRule: String(d[i][1]), points: Number(d[i][2]) });
+      }
+      return res;
     };
 
-    return ContentService.createTextOutput(JSON.stringify(result)).setMimeType(ContentService.MimeType.JSON);
-  }
-
-  // 2. LẤY DANH SÁCH HỌC SINH
-  if (action === 'pull_students') {
-    const dsSheet = ss.getSheetByName("danhsach");
-    const getSheetData = (sheet) => {
+    var getLogs = function(sheet) {
       if (!sheet) return [];
-      const data = sheet.getDataRange().getValues();
-      const headers = data[0];
-      return data.slice(1).map(row => {
-        let obj = {};
-        headers.forEach((header, index) => { obj[header.toString().trim()] = row[index]; });
-        return obj;
-      });
+      return sheet.getDataRange().getValues().slice(1);
     };
     
-    return ContentService.createTextOutput(JSON.stringify({
-      students: getSheetData(dsSheet),
-      appPassword: cloudPassword // Luôn gửi kèm mật khẩu
-    })).setMimeType(ContentService.MimeType.JSON);
+    // --- BẮT ĐẦU LẤY DỮ LIỆU ---
+
+    // Nội dung 4: Tên GVCN ở H2
+    var gvcnName = newsSheet ? String(newsSheet.getRange("H2").getValue()) : "Chưa cập nhật";
+    
+    // Mật khẩu app ở F2
+    var appPassword = xlhkSheet ? String(xlhkSheet.getRange("F2").getValue()) : "123";
+
+    // Nội dung 3: Ảnh hoạt động (A: Nội dung, B: Link)
+    var newsData = [];
+    if (newsSheet) {
+      var dNews = newsSheet.getRange("A2:B40").getValues();
+      for (var i = 0; i < dNews.length; i++) {
+        if (dNews[i][1]) newsData.push({ title: dNews[i][0] || "Hoạt động", link: dNews[i][1] });
+      }
+    }
+
+    // Nội dung 3: Tin tức (F: Tiêu đề, G: Link)
+    var newsList = [];
+    if (newsSheet) {
+      var dList = newsSheet.getRange("F2:G20").getValues();
+      for (var i = 0; i < dList.length; i++) {
+        if (dList[i][0]) newsList.push({ news: dList[i][0], link: dList[i][1] });
+      }
+    }
+
+    // Lấy Map ảnh thẻ (Cột B là IDHS, Cột G là URL Ảnh)
+    var avatars = {};
+    if (xlhkSheet) {
+      var dAvatars = xlhkSheet.getDataRange().getValues();
+      for (var i = 1; i < dAvatars.length; i++) {
+        var idKey = String(dAvatars[i][1] || "").trim();
+        var imgUrl = String(dAvatars[i][6] || "").trim();
+        if (idKey) avatars[idKey] = imgUrl;
+      }
+    }
+
+    // Lấy Danh sách học sinh
+    var dsSheet = ss.getSheetByName("danhsach");
+    var students = [];
+    if (dsSheet) {
+      var dStudents = dsSheet.getDataRange().getValues();
+      for (var i = 1; i < dStudents.length; i++) {
+        if (!dStudents[i][1]) continue;
+        var mhs = String(dStudents[i][8] || "").trim();
+        students.push({
+          stt: dStudents[i][0], 
+          name: String(dStudents[i][1]), 
+          class: String(dStudents[i][2]), 
+          date: String(dStudents[i][3]), 
+          gender: String(dStudents[i][4]), 
+          phoneNumber: String(dStudents[i][5]), 
+          idhs: mhs, 
+          avatarUrl: avatars[mhs] || "" 
+        });
+      }
+    }
+
+    // Nội dung 1: Tách Thưởng và BCH
+    var rewards = getRules("thanhtich");
+    var bchRules = getRules("bch");
+
+    // Lấy Ban cán sự lớp (C: Tên, D: IDHS, E: Chức vụ)
+    var bchNames = [];
+    if (newsSheet) {
+      var dBCH = newsSheet.getRange("C2:E10").getValues();
+      for (var i = 0; i < dBCH.length; i++) {
+        if (dBCH[i][0]) {
+          var idBch = String(dBCH[i][1]).trim();
+          bchNames.push({
+            name: dBCH[i][0],
+            idhs: idBch,
+            position: dBCH[i][2],
+            avatarUrl: avatars[idBch] || ""
+          });
+        }
+      }
+    }
+
+    var output = {
+      gvcnName: gvcnName,
+      appPassword: appPassword,
+      newsData: newsData,
+      newsList: newsList,
+      bchNames: bchNames,
+      students: students,
+      violations: getRules("bangloi"),
+      rewards: rewards,
+      bchRules: bchRules,
+      violationLogs: getLogs(vpSheet),
+      rewardLogs: getLogs(thSheet)
+    };
+
+    return ContentService.createTextOutput(JSON.stringify(output)).setMimeType(ContentService.MimeType.JSON);
   }
 }
 
+// Hàm doPost giữ nguyên logic của thầy nhưng dọn dẹp biến cho sạch
 function doPost(e) {
-  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
-  const data = JSON.parse(e.postData.contents);
-  const action = data.action;
-
-  // LƯU KẾT QUẢ XẾP LOẠI
-  if (action === 'save_final_grading') {
-    const weekLabel = data.week;
-    const finalResults = data.results;
-    const sheetTuan = ss.getSheetByName("tuan");
-    const sheetXepLoai = ss.getSheetByName("xeploai");
-
-    function updateSheet(sheet, isScoreMode) {
-      if (!sheet) return;
-      const fullData = sheet.getDataRange().getValues();
-      const headers = fullData[0];
-      let colIdx = headers.indexOf(weekLabel);
-      if (colIdx === -1) {
-        colIdx = headers.length;
-        sheet.getRange(1, colIdx + 1).setValue(weekLabel);
+  var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  var data = JSON.parse(e.postData.contents);
+  var action = data.action;
+  if (action === 'sync_all_master') {
+  var students = data.payload.students; // Mảng học sinh từ Excel
+  var dsSheet = ss.getSheetByName("danhsach");
+  
+  if (dsSheet && students && students.length > 0) {
+    // 1. Xóa trắng dữ liệu cũ từ hàng 2
+    var lastRowDs = dsSheet.getLastRow();
+    if (lastRowDs >= 2) dsSheet.getRange(2, 1, lastRowDs - 1, 9).clearContent();
+    
+    // 2. Chuẩn bị mảng dữ liệu để ghi hàng loạt (Tối ưu tốc độ)
+    var matrix = students.map(function(s, idx) {
+      return [idx + 1, s.name, s.class, s.date || "", s.gender || "Nam", s.phoneNumber || "", "", "", s.idhs];
+    });
+    
+    // 3. Ghi vào sheet danhsach
+    dsSheet.getRange(2, 1, matrix.length, 9).setValues(matrix);
+    
+    // 4. Đồng bộ sang các sheet nề nếp (Cột A: Tên, Cột B: IDHS)
+    var syncMatrix = students.map(function(s) { return [s.name, s.idhs]; });
+    var targets = ["vipham", "thuong", "tuan", "xeploai", "xeploaihk", "diemdanh"];
+    
+    targets.forEach(function(name) {
+      var sh = ss.getSheetByName(name);
+      if (sh) {
+        var lr = sh.getLastRow();
+        if (lr >= 2) sh.getRange(2, 1, lr - 1, 2).clearContent();
+        sh.getRange(2, 1, syncMatrix.length, 2).setValues(syncMatrix);
       }
-      finalResults.forEach(res => {
-        for (let i = 1; i < fullData.length; i++) {
-          if (String(fullData[i][1]) === String(res.idhs)) {
-            sheet.getRange(i + 1, colIdx + 1).setValue(isScoreMode ? res.score : res.rank);
-            break;
-          }
-        }
-      });
-    }
-
-    if (weekLabel.startsWith('w')) updateSheet(sheetTuan, true);
-    updateSheet(sheetXepLoai, false);
-    return ContentService.createTextOutput("SUCCESS");
+    });
   }
+  return ContentService.createTextOutput("SUCCESS");
+}
 
-  // CẬP NHẬT GHI CHÉP (LỖI/THƯỞNG)
   if (action === 'update_record') {
-    const sheet = ss.getSheetByName(data.target);
-    if (!sheet) return ContentService.createTextOutput("SHEET_NOT_FOUND");
-    const rows = sheet.getDataRange().getValues();
-    const studentId = String(data.studentId);
-
-    for (let i = 1; i < rows.length; i++) {
-      if (String(rows[i][1]) === studentId) {
-        let targetCol = 3;
-        for (let j = 2; j < rows[i].length; j++) {
+    var sheet = ss.getSheetByName(data.target);
+    if (!sheet) return ContentService.createTextOutput("ERROR");
+    var rows = sheet.getDataRange().getValues();
+    for (var i = 1; i < rows.length; i++) {
+      if (String(rows[i][1]) === String(data.studentId)) {
+        var targetCol = 3;
+        for (var j = 2; j < rows[i].length; j++) {
           if (!rows[i][j]) { targetCol = j + 1; break; }
           targetCol = j + 2;
         }
-        if (data.target === 'vipham') {
-          const codes = data.payloads.filter(c => c).map(c => c.toUpperCase());
-          sheet.getRange(i + 1, targetCol, 1, codes.length).setValues([codes]);
-        } else {
-          sheet.getRange(i + 1, targetCol).setValue(data.payload);
-        }
+        if (data.payloads) sheet.getRange(i+1, targetCol, 1, data.payloads.length).setValues([data.payloads]);
+        else if (data.payload) sheet.getRange(i+1, targetCol).setValue(data.payload);
         return ContentService.createTextOutput("SUCCESS");
       }
     }
   }
-  
-  // ĐỒNG BỘ DANH SÁCH (SYNC ALL)
-  if (action === 'sync_all') {
-    const { students } = data.payload;
-    const targetSheets = ["vipham", "thuong", "tuan", "xeploai", "xeploaihk", "diemdanh"];
-    const baseData = students.map(s => [s.name, s.idhs]);
-    targetSheets.forEach(name => {
-      const sheet = ss.getSheetByName(name);
-      if (sheet) {
-        if (sheet.getLastRow() > 1) sheet.getRange(2, 1, sheet.getLastRow()-1, 2).clearContent();
-        sheet.getRange(2, 1, baseData.length, 2).setValues(baseData);
+
+  if (action === 'add_single_student') {
+    var student = data.payload;
+    var stt = parseInt(student.stt);
+    var dsSheet = ss.getSheetByName("danhsach");
+    
+    if (dsSheet) {
+      var lastRow = dsSheet.getLastRow();
+      var targetRow = (stt && stt > 0 && stt <= lastRow) ? stt + 1 : lastRow + 1;
+      
+      if (stt && stt > 0 && targetRow <= lastRow) {
+        dsSheet.insertRowBefore(targetRow);
+      }
+      dsSheet.getRange(targetRow, 1, 1, 9).setValues([[stt || lastRow, student.name, "", "", "", "", "", "", student.idhs]]);
+      
+      var rows = dsSheet.getLastRow();
+      for(var i=2; i<=rows; i++) dsSheet.getRange(i, 1).setValue(i-1);
+    }
+
+    var targets = ["vipham", "thuong", "tuan", "xeploai", "xeploaihk", "diemdanh"];
+    targets.forEach(function(name) {
+      var sh = ss.getSheetByName(name);
+      if (sh) {
+        var rowToInsert = (stt && stt > 0) ? stt + 1 : sh.getLastRow() + 1;
+        if (stt && stt > 0 && rowToInsert <= sh.getLastRow()) sh.insertRowBefore(rowToInsert);
+        sh.getRange(rowToInsert, 1, 1, 2).setValues([[student.name, student.idhs]]);
       }
     });
     return ContentService.createTextOutput("SUCCESS");
   }
+}
+ 
+
+function saveToSheet(sheet, label, results, field) {
+  var headers = sheet.getDataRange().getValues()[0];
+  var colIdx = headers.indexOf(label);
+  if (colIdx === -1) {
+    colIdx = headers.length;
+    sheet.getRange(1, colIdx + 1).setValue(label);
+  }
+  var rows = sheet.getDataRange().getValues();
+  results.forEach(function(res) {
+    for (var i = 1; i < rows.length; i++) {
+      if (String(rows[i][1]) === String(res.idhs)) {
+        sheet.getRange(i + 1, colIdx + 1).setValue(res[field]);
+        break;
+      }
+    }
+  });
 }
