@@ -16,28 +16,32 @@ export const AttendanceManager = ({ state }: any) => {
 
   // BƯỚC 1: LỌC DANH SÁCH VẮNG VÀ CHUẨN BỊ DỮ LIỆU
   const prepareAttendance = () => {
-    const list = state.students
-      .map((s: any) => {
-        const currentStatus = attendance[s.idbgd];
-        // Chỉ xử lý nếu trạng thái là P hoặc KP
-        if (currentStatus === 'P' || currentStatus === 'KP') {
-          return {
-            stt: s.stt,
-            idbgd: s.idbgd,
-            name: s.name,
-            class: s.class, // Thêm lớp để gửi lên cột B
-            date: s.date,   // Ngày sinh để gửi lên cột E
-            type: currentStatus === 'KP' ? 'K' : currentStatus,
-            dd: String(today.getDate()).padStart(2, '0'),
-            mm: String(today.getMonth() + 1).padStart(2, '0'),
-            yyyy: String(today.getFullYear()),
-            break: 'N',
-            lido: 'Do sức khỏe'
-          };
-        }
-        return null;
-      })
-      .filter((item: any) => item !== null);
+   const list = state.students
+  .map((s: any) => {
+    const currentStatus = attendance[s.idbgd];
+    if (currentStatus === 'P' || currentStatus === 'KP') {
+      
+      // Xử lý biến ngày sinh để lấy đúng định dạng văn bản
+      // Giả sử s.date đang là "17/03/2008" hoặc một chuỗi tương tự
+      const rawDate = s.date ? String(s.date).split('T')[0] : ""; 
+
+      return {
+        stt: s.stt,
+        idbgd: s.idbgd,
+        name: s.name,
+        class: s.class,
+        date: rawDate, // Gửi chuỗi ngày sinh nguyên văn
+        type: currentStatus === 'KP' ? 'K' : currentStatus,
+        dd: String(today.getDate()).padStart(2, '0'),
+        mm: String(today.getMonth() + 1).padStart(2, '0'),
+        yyyy: String(today.getFullYear()),
+        break: 'N',
+        lido: 'Do sức khỏe'
+      };
+    }
+    return null;
+  })
+  .filter((item: any) => item !== null);
 
     if (list.length === 0) return alert("Chưa chọn học sinh vắng nào!");
     setPendingList(list);
