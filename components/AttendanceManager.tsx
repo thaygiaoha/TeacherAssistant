@@ -20,7 +20,7 @@ export const AttendanceManager = ({ state }: any) => {
       .map((s: any) => {
         const currentStatus = attendance[s.idbgd];
         // Chỉ xử lý nếu trạng thái là P hoặc KP
-        if (currentStatus === 'P' || currentStatus === 'KP') {
+        if (currentStatus === 'P' || currentStatus === 'K') {
           return {
             stt: s.stt,
             idbgd: s.idbgd,
@@ -86,7 +86,7 @@ export const AttendanceManager = ({ state }: any) => {
           onClick={prepareAttendance}
           className="bg-indigo-600 text-white px-8 py-4 rounded-2xl font-black flex items-center gap-2 hover:bg-slate-900 transition-all shadow-lg text-xs uppercase tracking-widest"
         >
-          <Send size={18}/> Tiếp tục ({state.students.filter((s:any) => attendance[s.idbgd] === 'P' || attendance[s.idbgd] === 'KP').length})
+          <Send size={18}/> Tiếp tục ({state.students.filter((s:any) => attendance[s.idbgd] === 'P' || attendance[s.idbgd] === 'K').length})
         </button>
       </div>
 
@@ -106,7 +106,7 @@ export const AttendanceManager = ({ state }: any) => {
               {[
                 { id: 'OK', label: 'CÓ MẶT', color: 'bg-emerald-500' },
                 { id: 'P', label: 'P', color: 'bg-amber-500' },
-                { id: 'KP', label: 'K', color: 'bg-rose-500' }
+                { id: 'KP', label: 'KP', color: 'bg-rose-500' }
               ].map((btn) => {
                 const isSelected = attendance[s.idbgd] === btn.id || (!attendance[s.idbgd] && btn.id === 'OK');
                 return (
@@ -175,6 +175,7 @@ export const AttendanceManager = ({ state }: any) => {
                       <option>Việc gia đình</option>
                       <option>Do ốm đau</option>
                       <option>Do đi khám bệnh</option>
+                      <option>Do đi du lịch</option>
                       <option>Lí do khác</option>
                     </select>
                   </div>
