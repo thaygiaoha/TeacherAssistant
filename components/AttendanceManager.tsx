@@ -106,7 +106,7 @@ export const AttendanceManager = ({ state }: any) => {
               {[
                 { id: 'OK', label: 'CÓ MẶT', color: 'bg-emerald-500' },
                 { id: 'P', label: 'P', color: 'bg-amber-500' },
-                { id: 'K', label: 'KP', color: 'bg-rose-500' }
+                { id: 'KP', label: 'K', color: 'bg-rose-500' }
               ].map((btn) => {
                 const isSelected = attendance[s.idbgd] === btn.id || (!attendance[s.idbgd] && btn.id === 'OK');
                 return (
