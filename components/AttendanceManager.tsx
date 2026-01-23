@@ -6,6 +6,7 @@ export const AttendanceManager = ({ state }: any) => {
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [pendingList, setPendingList] = useState<any[]>([]);
+  const [expandedIds, setExpandedIds] = useState<string[]>([]);
 
   const today = new Date();
   const dateStr = `${String(today.getDate()).padStart(2, '0')}/${String(today.getMonth() + 1).padStart(2, '0')}/${today.getFullYear()}`;
@@ -60,6 +61,12 @@ export const AttendanceManager = ({ state }: any) => {
       item.idbgd === idbgd ? { ...item, [field]: value } : item
     ));
   };
+  2. Hàm để đóng/mở ô nhập ngày cho từng học sinh
+const toggleRange = (id: string) => {
+  setExpandedIds(prev => 
+    prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+  );
+};
 const getDatesInRange = (startDateStr, endDateStr) => {
   const dates = [];
   let curr = new Date(startDateStr);
@@ -177,8 +184,8 @@ const getDatesInRange = (startDateStr, endDateStr) => {
             </div>
             <div className="overflow-y-auto p-6 space-y-4 bg-white">
               {pendingList.map((item) => {
-  // Trạng thái cục bộ để ẩn/hiện ô "Đến ngày" cho từng học sinh
-  const [isRange, setIsRange] = useState(false);
+  // Kiểm tra xem học sinh này có đang được chọn nghỉ dài ngày không
+  const isRange = expandedIds.includes(item.idbgd);
 
   return (
     <div key={item.idbgd} className="p-5 rounded-[30px] border border-slate-100 bg-slate-50/50 space-y-4">
@@ -188,9 +195,10 @@ const getDatesInRange = (startDateStr, endDateStr) => {
           <span className="text-[9px] text-slate-500 font-bold italic">Mã số: {item.idbgd}</span>
         </div>
         
-        {/* Nút bấm để chọn thêm ngày */}
+        {/* Nút bấm gọi hàm toggleRange */}
         <button 
-          onClick={() => setIsRange(!isRange)}
+          type="button"
+          onClick={() => toggleRange(item.idbgd)}
           className={`px-3 py-1.5 rounded-xl text-[9px] font-black uppercase transition-all ${
             isRange ? 'bg-rose-100 text-rose-600' : 'bg-indigo-100 text-indigo-600'
           }`}
@@ -200,29 +208,40 @@ const getDatesInRange = (startDateStr, endDateStr) => {
       </div>
 
       <div className="grid grid-cols-1 gap-3">
-        {/* Hàng 1: Chọn ngày */}
         <div className={`grid ${isRange ? 'grid-cols-2' : 'grid-cols-1'} gap-3 transition-all`}>
           <div className="space-y-1">
             <label className="text-[9px] font-black uppercase text-slate-400 ml-2">
-              {isRange ? "Từ ngày" : "Ngày nghỉ"}
+              {isRange ? "Từ ngày" : "Ngày vắng"}
             </label>
-            <input type="date" defaultValue={`${item.yyyy}-${item.mm}-${item.dd}`} 
+            <input type="date" 
+              defaultValue={`${item.yyyy}-${item.mm}-${item.dd}`} 
               onChange={(e) => {
                 const [y, m, d] = e.target.value.split('-');
                 updatePendingItem(item.idbgd, 'dd', d); 
                 updatePendingItem(item.idbgd, 'mm', m); 
                 updatePendingItem(item.idbgd, 'yyyy', y);
-              }} className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold" />
+              }} 
+              className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold" 
+            />
           </div>
 
           {isRange && (
-            <div className="space-y-1 animate-in fade-in slide-in-from-left-2">
+            <div className="space-y-1">
               <label className="text-[9px] font-black uppercase text-rose-400 ml-2">Đến ngày</label>
-              <input type="date" defaultValue={`${item.yyyy}-${item.mm}-${item.dd}`} 
+              <input type="date" 
+                defaultValue={`${item.yyyy}-${item.mm}-${item.dd}`} 
                 onChange={(e) => updatePendingItem(item.idbgd, 'endDate', e.target.value)}
-                className="w-full bg-white border border-rose-200 rounded-xl px-3 py-2 text-xs font-bold" />
+                className="w-full bg-white border border-rose-200 rounded-xl px-3 py-2 text-xs font-bold" 
+              />
             </div>
           )}
+        </div>
+
+        {/* Các phần Select lý do giữ nguyên... */}
+      </div>
+    </div>
+  );
+})}
         </div>
 
         {/* Hàng 2: Buổi nghỉ và Lý do */}
