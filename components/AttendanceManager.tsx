@@ -6,13 +6,7 @@ export const AttendanceManager = ({ state }: any) => {
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [pendingList, setPendingList] = useState<any[]>([]);
-  const [expandedIds, setExpandedIds] = useState<string[]>([]);
-    2. Hàm để đóng/mở ô nhập ngày cho từng học sinh
-const toggleRange = (id: string) => {
-  setExpandedIds(prev => 
-    prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
-  );
-};
+  const [expandedIds, setExpandedIds] = useState<string[]>([]); 
 
   const today = new Date();
   const dateStr = `${String(today.getDate()).padStart(2, '0')}/${String(today.getMonth() + 1).padStart(2, '0')}/${today.getFullYear()}`;
@@ -20,7 +14,12 @@ const toggleRange = (id: string) => {
   const handleUpdateStatus = (idbgd: string, status: string) => {
     setAttendance(prev => ({ ...prev, [idbgd]: status }));
   };
-
+   2. Hàm để đóng/mở ô nhập ngày cho từng học sinh
+const toggleRange = (id: string) => {
+  setExpandedIds(prev => 
+    prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+  );
+};
   const prepareAttendance = () => {
     const list = state.students
       .map((s: any) => {
