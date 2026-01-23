@@ -60,28 +60,68 @@ export const AttendanceManager = ({ state }: any) => {
       item.idbgd === idbgd ? { ...item, [field]: value } : item
     ));
   };
-
+const getDatesInRange = (startDateStr, endDateStr) => {
+  const dates = [];
+  let curr = new Date(startDateStr);
+  const end = new Date(endDateStr);
+  
+  // Vòng lặp lấy đủ tất cả các ngày (bao gồm cả T7, CN nếu dính trong khoảng)
+  while (curr <= end) {
+    dates.push(new Date(curr));
+    curr.setDate(curr.getDate() + 1);
+  }
+  return dates;
+};
   const submitAttendance = async () => {
-    if (!state.googleScriptUrl) return alert("Chưa có link Script!");
-    setLoading(true);
-    try {
-      await fetch(state.googleScriptUrl, {
-        method: 'POST',
-        mode: 'no-cors',
-        body: JSON.stringify({
-          action: 'save_attendance_batch',
-          payload: pendingList
-        })
+  if (!state.googleScriptUrl) return alert("Chưa có link Script!");
+  setLoading(true);
+  
+  let finalBatch = []; // Mảng chứa tất cả các dòng sẽ ghi xuống Sheet
+  
+  pendingList.forEach(item => {
+    // 1. Tạo chuỗi ngày bắt đầu từ dữ liệu của học sinh
+    const startDateStr = `${item.yyyy}-${item.mm}-${item.dd}`;
+    
+    // 2. Lấy ngày kết thúc (nếu thầy không chọn "Đến ngày", nó lấy luôn ngày bắt đầu)
+    const endDateStr = item.endDate || startDateStr; 
+    
+    // 3. Gọi hàm tính toán danh sách các ngày
+    const range = getDatesInRange(startDateStr, endDateStr);
+    
+    // 4. Với mỗi ngày trong khoảng, tạo ra một dòng dữ liệu mới
+    range.forEach(d => {
+      finalBatch.push({
+        ...item,
+        dd: String(d.getDate()).padStart(2, '0'),
+        mm: String(d.getMonth() + 1).padStart(2, '0'),
+        yyyy: String(d.getFullYear()),
       });
-      alert(`✅ Đã lưu ${pendingList.length} học sinh vắng!`);
-      setShowModal(false);
-      setAttendance({}); 
-    } catch (e) {
-      alert("Lỗi kết nối!");
-    } finally {
-      setLoading(false);
-    }
-  };
+    });
+  });
+
+  if (finalBatch.length === 0) {
+    setLoading(false);
+    return alert("Chưa có dữ liệu ngày hợp lệ!");
+  }
+
+  try {
+    await fetch(state.googleScriptUrl, {
+      method: 'POST',
+      mode: 'no-cors',
+      body: JSON.stringify({
+        action: 'save_attendance_batch',
+        payload: finalBatch
+      })
+    });
+    alert(`✅ Thành công! Đã ghi ${finalBatch.length} lượt nghỉ xuống Sheet.`);
+    setShowModal(false);
+    setAttendance({});
+  } catch (e) {
+    alert("Lỗi kết nối!");
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div className="max-w-4xl mx-auto space-y-6 pb-20">
