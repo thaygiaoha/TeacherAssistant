@@ -184,18 +184,18 @@ const getDatesInRange = (startDateStr, endDateStr) => {
             </div>
             <div className="overflow-y-auto p-6 space-y-4 bg-white">
               {pendingList.map((item) => {
-  // Kiểm tra xem học sinh này có đang được chọn nghỉ dài ngày không
+  // Kiểm tra xem học sinh này có đang được chọn nghỉ dài ngày không (dùng state expandedIds đã khai báo ở đầu)
   const isRange = expandedIds.includes(item.idbgd);
 
   return (
     <div key={item.idbgd} className="p-5 rounded-[30px] border border-slate-100 bg-slate-50/50 space-y-4">
+      {/* PHẦN ĐẦU: Tên học sinh và Nút mở rộng */}
       <div className="flex justify-between items-center">
         <div>
           <span className="font-black text-slate-800 uppercase text-sm block">{item.name}</span>
           <span className="text-[9px] text-slate-500 font-bold italic">Mã số: {item.idbgd}</span>
         </div>
         
-        {/* Nút bấm gọi hàm toggleRange */}
         <button 
           type="button"
           onClick={() => toggleRange(item.idbgd)}
@@ -208,6 +208,7 @@ const getDatesInRange = (startDateStr, endDateStr) => {
       </div>
 
       <div className="grid grid-cols-1 gap-3">
+        {/* HÀNG 1: Chọn ngày (Tự động chuyển 1 cột hoặc 2 cột) */}
         <div className={`grid ${isRange ? 'grid-cols-2' : 'grid-cols-1'} gap-3 transition-all`}>
           <div className="space-y-1">
             <label className="text-[9px] font-black uppercase text-slate-400 ml-2">
@@ -221,23 +222,51 @@ const getDatesInRange = (startDateStr, endDateStr) => {
                 updatePendingItem(item.idbgd, 'mm', m); 
                 updatePendingItem(item.idbgd, 'yyyy', y);
               }} 
-              className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold" 
+              className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold shadow-sm" 
             />
           </div>
 
           {isRange && (
-            <div className="space-y-1">
+            <div className="space-y-1 animate-in fade-in slide-in-from-left-2">
               <label className="text-[9px] font-black uppercase text-rose-400 ml-2">Đến ngày</label>
               <input type="date" 
                 defaultValue={`${item.yyyy}-${item.mm}-${item.dd}`} 
                 onChange={(e) => updatePendingItem(item.idbgd, 'endDate', e.target.value)}
-                className="w-full bg-white border border-rose-200 rounded-xl px-3 py-2 text-xs font-bold" 
+                className="w-full bg-white border border-rose-200 rounded-xl px-3 py-2 text-xs font-bold shadow-sm" 
               />
             </div>
           )}
         </div>
 
-        {/* Các phần Select lý do giữ nguyên... */}
+        {/* HÀNG 2: Chọn Buổi nghỉ và Lý do (Đây là phần thầy chót xóa đây ạ) */}
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1">
+            <label className="text-[9px] font-black uppercase text-slate-400 ml-2">Buổi nghỉ</label>
+            <select 
+              value={item.break} 
+              onChange={(e) => updatePendingItem(item.idbgd, 'break', e.target.value)} 
+              className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold shadow-sm"
+            >
+              <option value="N">Cả ngày (N)</option>
+              <option value="S">Buổi Sáng (S)</option>
+              <option value="C">Buổi Chiều (C)</option>
+            </select>
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-[9px] font-black uppercase text-slate-400 ml-2">Lý do nghỉ</label>
+            <select 
+              value={item.lido} 
+              onChange={(e) => updatePendingItem(item.idbgd, 'lido', e.target.value)} 
+              className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold shadow-sm"
+            >
+              <option>Do sức khỏe</option>
+              <option>Việc gia đình</option>
+              <option>Ốm đau/Nằm viện</option>
+              <option>Lý do khác</option>
+            </select>
+          </div>
+        </div>
       </div>
     </div>
   );
