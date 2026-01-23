@@ -7,6 +7,12 @@ export const AttendanceManager = ({ state }: any) => {
   const [showModal, setShowModal] = useState(false);
   const [pendingList, setPendingList] = useState<any[]>([]);
   const [expandedIds, setExpandedIds] = useState<string[]>([]);
+    2. Hàm để đóng/mở ô nhập ngày cho từng học sinh
+const toggleRange = (id: string) => {
+  setExpandedIds(prev => 
+    prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+  );
+};
 
   const today = new Date();
   const dateStr = `${String(today.getDate()).padStart(2, '0')}/${String(today.getMonth() + 1).padStart(2, '0')}/${today.getFullYear()}`;
@@ -61,12 +67,7 @@ export const AttendanceManager = ({ state }: any) => {
       item.idbgd === idbgd ? { ...item, [field]: value } : item
     ));
   };
-  2. Hàm để đóng/mở ô nhập ngày cho từng học sinh
-const toggleRange = (id: string) => {
-  setExpandedIds(prev => 
-    prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
-  );
-};
+
 const getDatesInRange = (startDateStr, endDateStr) => {
   const dates = [];
   let curr = new Date(startDateStr);
