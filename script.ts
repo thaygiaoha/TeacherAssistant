@@ -1,10 +1,9 @@
+const SPREADSHEET_ID = "1hKbsw8Y_fkMb4hBPRuKClJGx_bRFo9Y4Wei2Ot3R8OI";
+
 /**
  * @file Google Apps Script backend - Tổng hợp từ File 1 & File 2
  * Thầy copy toàn bộ file này dán vào Google Apps Script (Editor)
  */
-
-var SPREADSHEET_ID = "16QwNRbM5NppnfFYujPUq1ZweYcqbnetF-z4SvTS01n8";
-
 function doGet(e) {
   var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
   var action = e.parameter.action;
@@ -96,10 +95,17 @@ function doGet(e) {
         if (!dataDS[i][1]) continue;
         var mhs = String(dataDS[i][8] || "").trim();
         students.push({
-          stt: dataDS[i][0], name: String(dataDS[i][1]), class: String(dataDS[i][2]), 
-          date: String(dataDS[i][3]), gender: String(dataDS[i][4]), 
-          phoneNumber: String(dataDS[i][5]), accommodation: String(dataDS[i][6]), 
-          cccd: String(dataDS[i][7]), idhs: mhs, avatarUrl: avatars[mhs] || "" 
+          stt: dataDS[i][0], 
+          name: String(dataDS[i][1]), 
+          class: String(dataDS[i][2]), 
+          date: String(dataDS[i][3]), 
+          gender: String(dataDS[i][4]), 
+          phoneNumber: String(dataDS[i][5]), 
+          accommodation: String(dataDS[i][6]), 
+          cccd: String(dataDS[i][7]), 
+          idhs: mhs, 
+          idbgd: String(dataDS[i][9] || ""),
+          avatarUrl: avatars[mhs] || "" 
         });
       }
     }
@@ -168,7 +174,7 @@ function doPost(e) {
       for(var i=2; i<=rowsDS; i++) dsSheet.getRange(i, 1).setValue(i-1);
     }
 
-    var targets = ["vipham", "thuong", "tuan", "xeploai", "xeploaihk", "diemdanh"];
+    var targets = ["vipham", "thuong", "tuan", "xeploai", "xeploaihk"];
     targets.forEach(function(name) {
       var sh = ss.getSheetByName(name);
       if (sh) {
@@ -185,12 +191,33 @@ function doPost(e) {
     var students = data.payload.students;
     var relatives = data.payload.relatives;
     
-    var dsSheet = ss.getSheetByName("danhsach");
-    if (dsSheet) {
-      if (dsSheet.getLastRow() > 1) dsSheet.getRange(2, 1, dsSheet.getLastRow() - 1, 9).clearContent();
-      var dsRows = students.map(function(s) { return [s.stt, s.name, s.class, s.date, s.gender, s.phoneNumber, s.accommodation, s.cccd, s.idhs]; });
-      if (dsRows.length > 0) dsSheet.getRange(2, 1, dsRows.length, 9).setValues(dsRows);
-    }
+   var dsSheet = ss.getSheetByName("danhsach");
+ if (dsSheet) {
+  // 1. Phải xóa đủ 10 cột (Sửa 9 -> 10)
+  if (dsSheet.getLastRow() > 1) {
+    dsSheet.getRange(2, 1, dsSheet.getLastRow() - 1, 10).clearContent();
+  }
+
+  var dsRows = students.map(function(s) { 
+    return [
+      s.stt, 
+      s.name, 
+      s.class, 
+      s.date, 
+      s.gender, 
+      s.phoneNumber, 
+      s.accommodation, 
+      s.cccd, 
+      s.idhs,
+      s.idbgd || "" // Đảm bảo nếu rỗng thì ghi chuỗi trống, không bị lỗi
+    ]; 
+  });
+
+  if (dsRows.length > 0) {
+    // 2. Ghi đủ 10 cột (Dòng này thầy đã sửa đúng là 10 rồi)
+    dsSheet.getRange(2, 1, dsRows.length, 10).setValues(dsRows);
+  }
+   }
 
     var ntSheet = ss.getSheetByName("nguoithan");
     if (ntSheet) {
@@ -264,4 +291,40 @@ function doPost(e) {
     });
     return ContentService.createTextOutput("SUCCESS");
   }
+  // --- 5. LƯU ĐIỂM DANH CHI TIẾT (Lưu vào hàng cuối cùng) ---
+  if (action === 'save_attendance_batch') {
+    var list = data.payload;
+    var attSheet = ss.getSheetByName("diemdanh");
+    if (attSheet) {
+      list.forEach(function(item) {
+        // Xử lý ngày sinh: Nếu là Object Date thì định dạng lại, nếu là chuỗi thì giữ nguyên
+        var cleanDate = item.date;
+        try {
+          if (cleanDate && cleanDate.toString().includes('T')) {
+             // Nếu là định dạng ISO từ App gửi sang, ta format lại
+             cleanDate = Utilities.formatDate(new Date(cleanDate), "GMT+7", "dd/MM/yyyy");
+          }
+        } catch(e) {}
+
+        attSheet.appendRow([
+          item.stt, 
+          item.class, 
+          item.idbgd, 
+          item.name, 
+          "'" + cleanDate, // Thêm dấu nháy đơn để Google Sheet hiểu là văn bản thuần túy
+          item.dd, 
+          item.mm, 
+          item.yyyy, 
+          item.break, 
+          item.type, 
+          item.lido
+        ]);
+      });
+      return ContentService.createTextOutput("SUCCESS");
+    }
+  }
+}
+function testPermission() {
+  SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName("news").getRange("H2").getValue();
+  console.log("Cấp quyền thành công!");
 }
