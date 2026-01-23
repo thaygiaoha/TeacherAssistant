@@ -136,31 +136,73 @@ export const AttendanceManager = ({ state }: any) => {
               <button onClick={() => setShowModal(false)} className="text-slate-400"><X/></button>
             </div>
             <div className="overflow-y-auto p-6 space-y-4 bg-white">
-              {pendingList.map((item) => (
-                <div key={item.idbgd} className="p-5 rounded-[30px] border border-slate-100 bg-slate-50/50 space-y-4">
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <span className="font-black text-slate-800 uppercase text-sm block">{item.name}</span>
-                      <span className="text-[9px] text-slate-500 font-bold italic">Ngày sinh: {item.date}</span>
-                    </div>
-                    <span className={`px-3 py-1 rounded-full text-[10px] font-black text-white ${item.displayType === 'P' ? 'bg-amber-500' : 'bg-rose-500'}`}>
-                      {item.displayType === 'P' ? 'CÓ PHÉP (P)' : 'K.PHÉP (KP)'}
-                    </span>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                    <input type="date" defaultValue={`${item.yyyy}-${item.mm}-${item.dd}`} onChange={(e) => {
-                        const [y, m, d] = e.target.value.split('-');
-                        updatePendingItem(item.idbgd, 'dd', d); updatePendingItem(item.idbgd, 'mm', m); updatePendingItem(item.idbgd, 'yyyy', y);
-                    }} className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold" />
-                    <select value={item.break} onChange={(e) => updatePendingItem(item.idbgd, 'break', e.target.value)} className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold">
-                      <option value="N">Cả ngày (N)</option><option value="S">Sáng (S)</option><option value="C">Chiều (C)</option>
-                    </select>
-                    <select value={item.lido} onChange={(e) => updatePendingItem(item.idbgd, 'lido', e.target.value)} className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold">
-                      <option>Do sức khỏe</option><option>Việc gia đình</option><option>Do ốm đau</option><option>Lí do khác</option>
-                    </select>
-                  </div>
-                </div>
-              ))}
+              {pendingList.map((item) => {
+  // Trạng thái cục bộ để ẩn/hiện ô "Đến ngày" cho từng học sinh
+  const [isRange, setIsRange] = useState(false);
+
+  return (
+    <div key={item.idbgd} className="p-5 rounded-[30px] border border-slate-100 bg-slate-50/50 space-y-4">
+      <div className="flex justify-between items-center">
+        <div>
+          <span className="font-black text-slate-800 uppercase text-sm block">{item.name}</span>
+          <span className="text-[9px] text-slate-500 font-bold italic">Mã số: {item.idbgd}</span>
+        </div>
+        
+        {/* Nút bấm để chọn thêm ngày */}
+        <button 
+          onClick={() => setIsRange(!isRange)}
+          className={`px-3 py-1.5 rounded-xl text-[9px] font-black uppercase transition-all ${
+            isRange ? 'bg-rose-100 text-rose-600' : 'bg-indigo-100 text-indigo-600'
+          }`}
+        >
+          {isRange ? "✕ Hủy nghỉ dài" : "+ Thêm ngày nghỉ"}
+        </button>
+      </div>
+
+      <div className="grid grid-cols-1 gap-3">
+        {/* Hàng 1: Chọn ngày */}
+        <div className={`grid ${isRange ? 'grid-cols-2' : 'grid-cols-1'} gap-3 transition-all`}>
+          <div className="space-y-1">
+            <label className="text-[9px] font-black uppercase text-slate-400 ml-2">
+              {isRange ? "Từ ngày" : "Ngày nghỉ"}
+            </label>
+            <input type="date" defaultValue={`${item.yyyy}-${item.mm}-${item.dd}`} 
+              onChange={(e) => {
+                const [y, m, d] = e.target.value.split('-');
+                updatePendingItem(item.idbgd, 'dd', d); 
+                updatePendingItem(item.idbgd, 'mm', m); 
+                updatePendingItem(item.idbgd, 'yyyy', y);
+              }} className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold" />
+          </div>
+
+          {isRange && (
+            <div className="space-y-1 animate-in fade-in slide-in-from-left-2">
+              <label className="text-[9px] font-black uppercase text-rose-400 ml-2">Đến ngày</label>
+              <input type="date" defaultValue={`${item.yyyy}-${item.mm}-${item.dd}`} 
+                onChange={(e) => updatePendingItem(item.idbgd, 'endDate', e.target.value)}
+                className="w-full bg-white border border-rose-200 rounded-xl px-3 py-2 text-xs font-bold" />
+            </div>
+          )}
+        </div>
+
+        {/* Hàng 2: Buổi nghỉ và Lý do */}
+        <div className="grid grid-cols-2 gap-3">
+          <select value={item.break} onChange={(e) => updatePendingItem(item.idbgd, 'break', e.target.value)} className="bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold">
+            <option value="N">Cả ngày</option>
+            <option value="S">Buổi Sáng</option>
+            <option value="C">Buổi Chiều</option>
+          </select>
+          <select value={item.lido} onChange={(e) => updatePendingItem(item.idbgd, 'lido', e.target.value)} className="bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold">
+            <option>Do sức khỏe</option>
+            <option>Việc gia đình</option>
+            <option>Nghỉ có phép</option>
+            <option>Lí do khác</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  );
+})}
             </div>
             <div className="p-6 border-t bg-slate-50">
               <button onClick={submitAttendance} disabled={loading} className="w-full bg-indigo-600 text-white py-4 rounded-2xl font-black text-xs uppercase shadow-lg active:scale-95 transition-all">
