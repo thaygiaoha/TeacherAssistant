@@ -261,7 +261,8 @@ export const AttendanceManager = ({ state }: any) => {
                         >
                           <option>Do sức khỏe</option>
                           <option>Việc gia đình</option>
-                          <option>Nghỉ có phép</option>
+                          <option>Đi khám bệnh</option>
+                          <option>Đi du lịch</option>
                           <option>Lí do khác</option>
                         </select>
                       </div>
