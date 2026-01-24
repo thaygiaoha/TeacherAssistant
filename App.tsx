@@ -33,7 +33,7 @@ export default function App() {
       rewardLogs: [],
       currentWeek: 1,
       googleScriptUrl: '',
-      appPassword: '123',
+      appPassword: 'admin',
       gradingThresholds: { tot: 100, kha: 90, dat: 80, chuaDat: 70 },
       manualRanks: []
     };
